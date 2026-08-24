@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="820" viewBox="0 0 1400 820">
+  <rect width="1400" height="820" fill="#07110e"/>
+  <style>
+    .box{fill:#10231d;stroke:#2f6f57;stroke-width:2;rx:18}.core{fill:#173c30;stroke:#75f0b1;stroke-width:3;rx:22}.human{fill:#3a2d15;stroke:#ffd17b;stroke-width:2;rx:18}.t{fill:#f4fff9;font:700 25px Arial}.s{fill:#a9c0b6;font:18px Arial}.line{stroke:#5d927b;stroke-width:3;fill:none;marker-end:url(#a)}
+  </style>
+  <defs><marker id="a" markerWidth="12" markerHeight="12" refX="10" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#5d927b"/></marker></defs>
+  <text x="70" y="70" class="t" font-size="38">Lead Rescue — Architecture</text>
+  <text x="70" y="105" class="s">Quiet autonomy for small-business lead follow-up using Strands Agents</text>
+
+  <rect x="70" y="185" width="240" height="130" class="box"/>
+  <text x="100" y="230" class="t">Inbound leads</text>
+  <text x="100" y="265" class="s">Website · Email · GBP</text>
+  <text x="100" y="292" class="s">Real customer inquiries</text>
+
+  <rect x="405" y="165" width="300" height="170" class="core"/>
+  <text x="448" y="220" class="t">Strands Agent Loop</text>
+  <text x="448" y="258" class="s">Model → tool selection</text>
+  <text x="448" y="287" class="s">→ action → reasoning</text>
+  <text x="448" y="316" class="s">Professional Agent</text>
+
+  <rect x="810" y="90" width="260" height="120" class="box"/>
+  <text x="850" y="140" class="t">Amazon Bedrock</text>
+  <text x="850" y="176" class="s">Claude Sonnet model</text>
+
+  <rect x="810" y="250" width="260" height="120" class="box"/>
+  <text x="850" y="300" class="t">Business context</text>
+  <text x="850" y="336" class="s">Policies · service area</text>
+
+  <rect x="810" y="410" width="260" height="120" class="box"/>
+  <text x="850" y="460" class="t">Calendar tool</text>
+  <text x="850" y="496" class="s">Only real availability</text>
+
+  <rect x="1120" y="185" width="220" height="120" class="box"/>
+  <text x="1150" y="235" class="t">Customer action</text>
+  <text x="1150" y="271" class="s">Reply · schedule</text>
+
+  <rect x="1120" y="410" width="220" height="140" class="box"/>
+  <text x="1150" y="458" class="t">Follow-up tool</text>
+  <text x="1150" y="494" class="s">No lead forgotten</text>
+  <text x="1150" y="522" class="s">Automatic next step</text>
+
+  <rect x="520" y="610" width="360" height="130" class="human"/>
+  <text x="565" y="660" class="t">Owner decision only</text>
+  <text x="565" y="697" class="s">Price · discount · unusual promise</text>
+  <text x="565" y="725" class="s">2–4 clear options, then stop</text>
+
+  <path d="M310 250 H405" class="line"/>
+  <path d="M705 220 C755 220 770 150 810 150" class="line"/>
+  <path d="M705 250 H810" class="line"/>
+  <path d="M705 285 C760 285 765 470 810 470" class="line"/>
+  <path d="M1070 310 C1100 310 1090 245 1120 245" class="line"/>
+  <path d="M1070 470 H1120" class="line"/>
+  <path d="M650 335 C650 470 700 520 700 610" class="line"/>
+</svg>
