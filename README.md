@@ -1,44 +1,48 @@
 # Lead Rescue
 
-**An autonomous lead-follow-up agent for busy small-business owners, built with the Strands Agents SDK and Amazon Bedrock.**
+**An autonomous lead-follow-up agent for busy small-business owners, built with the Strands Agents SDK.**
 
-Lead Rescue handles the repetitive work between a new inquiry and a real owner decision. It loads business policy, reads the inbound lead queue, checks actual appointment availability, sends routine replies, schedules follow-ups, and pauses only when a human decision is genuinely required.
+Lead Rescue takes on the repetitive work between “new inquiry” and “owner decision.” It reads inbound leads, loads business policy, checks real appointment availability, sends routine customer replies, schedules follow-ups, and pauses only when a human decision is actually required.
 
 Built during the **Agents for Humans Hackathon 2026** for the **Professional Agents** track.
 
-## Why it exists
+## The problem
 
-Small service businesses lose leads because the owner is simultaneously doing the work, driving, quoting jobs, answering calls, and managing a calendar. Most lead software creates another inbox. Lead Rescue is designed to quietly clear routine work and surface only decisions that need the owner.
+Small service businesses lose good leads because the owner is simultaneously doing the work, answering calls, driving, quoting jobs, and managing a calendar. Typical lead software creates another inbox to manage. Lead Rescue is designed to do the opposite: quietly clear routine work and surface only decisions that genuinely need the owner.
 
 ## What the demo proves
 
-The included sample queue intentionally contains three different cases:
+The sample queue contains three intentionally different leads:
 
-1. **Urgent no-cooling request** — the agent checks real availability and can offer a valid same-day slot.
-2. **Price-match negotiation** — the agent is prohibited from inventing a discount, so it escalates a concise decision to the owner.
-3. **Routine tune-up** — the agent uses published business information, checks availability, replies, and schedules follow-up.
+1. **Urgent no-cooling request** — the agent identifies urgency, checks actual availability, and can offer a valid same-day slot.
+2. **Price-match negotiation** — the agent is not allowed to invent a discount, so it escalates a concise decision to the owner.
+3. **Routine tune-up** — the agent checks calendar availability, responds using published business information, and schedules follow-up.
 
-This is an action-taking agent, not a chatbot. Its tools update workflow state.
+This is not a chatbot demo. The agent has tools that change lead state and create real workflow actions.
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-    A[Inbound Leads] --> B[Strands Agent]
-    B --> C[Amazon Bedrock]
-    B --> D[Business Context Tool]
-    B --> E[Calendar Tool]
-    B --> F[Customer Reply Tool]
-    B --> G[Follow-up Tool]
-    B --> H[Owner Escalation Tool]
-    F --> I[Routine work completed]
-    G --> I
-    H --> J[Human decision only]
+    A[Inbound Leads] --> B[Next.js Interface]
+    B --> C[Strands Agent]
+    C --> D[Amazon Bedrock]
+    C --> E[Business Context]
+    C --> F[Lead Queue]
+    C --> G[Calendar]
+    C --> H[Reply Action]
+    C --> I[Follow-up Action]
+    C --> J[Owner Escalation]
+    H --> K[Routine work completed]
+    I --> K
+    J --> L[Human decision only]
 ```
 
-## Tools
+A larger version is in [`docs/architecture.md`](docs/architecture.md).
 
-The single-file agent in `lead_rescue.py` implements:
+## Strands implementation
+
+The core agent lives in [`lib/agent.ts`](lib/agent.ts). It uses the Strands tool system for:
 
 - `get_business_context`
 - `get_new_leads`
@@ -48,30 +52,44 @@ The single-file agent in `lead_rescue.py` implements:
 - `escalate_to_owner`
 - `mark_lead_closed`
 
+The preferred hackathon model path is **Amazon Bedrock**. A Vercel AI Gateway model path is included as a convenience for a live hosted demo when Bedrock credentials are not present.
+
 ## Run locally
 
-Requirements: Python 3.10+ and AWS credentials with Amazon Bedrock model access.
+Requirements: Node.js 20+ and an AWS account with Bedrock model access.
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-python lead_rescue.py
+npm install
+cp .env.example .env.local
+# configure AWS credentials using your preferred AWS-supported method
+npm run dev
 ```
 
-Strands uses Amazon Bedrock natively. The demo selects `global.anthropic.claude-sonnet-4-6` in `us-west-2`. Change the model ID or region if your AWS account uses different enabled Bedrock access.
+Open `http://localhost:3000` and press **Run the lead queue**.
 
-AWS-supported credential methods include environment variables, `aws configure`, IAM roles, or a Bedrock API key. **Never commit credentials to this repository.**
+### Amazon Bedrock configuration
 
-## Human-in-the-loop safety
+The app automatically uses Bedrock when AWS credentials are present. The default model ID is:
 
-Lead Rescue is deliberately conservative around irreversible or owner-only decisions. The system prompt and tool boundary prohibit autonomous discounts, price matching, unsupported promises, unusual warranty commitments, and legal commitments. Those cases become explicit owner decisions with concise options.
+```text
+global.anthropic.claude-sonnet-4-6
+```
 
-## Commercial path
+Override it with `BEDROCK_MODEL_ID` if your AWS account uses a different enabled Bedrock model.
 
-The same architecture can be adapted to HVAC companies, roofers, electricians, garage-door companies, landscapers, junk-removal companies, and other local businesses where slow response and forgotten follow-up directly cost revenue.
+### Optional Vercel live-demo fallback
 
-The product is not “AI chat.” The outcome is **faster lead response, fewer forgotten leads, and fewer unnecessary owner interruptions.**
+If AWS credentials are absent, the app uses the Vercel AI Gateway adapter supported by Strands. On a Vercel project with AI Gateway enabled, OIDC can provide authentication without storing a provider API key.
+
+## Safety / human-in-the-loop design
+
+Lead Rescue is intentionally conservative around irreversible or owner-only decisions. The prompt and tool boundary prohibit the agent from independently making discounts, price matches, unusual warranty commitments, or unsupported promises. Those cases are converted into explicit owner decisions with options.
+
+## Why this can become a business
+
+The same architecture can be adapted to garage-door companies, roofers, landscapers, HVAC contractors, electricians, junk-removal companies, and other local businesses where missed or slow lead response directly costs revenue.
+
+The commercial product is not “AI chat.” The outcome is **faster lead response, fewer forgotten follow-ups, and fewer owner interruptions.**
 
 ## Hackathon disclosure
 
