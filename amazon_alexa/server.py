@@ -40,9 +40,10 @@ def morning_rescue_brief() -> str:
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", "8000"))
+    host = os.getenv("HOST", "127.0.0.1")
     mcp.run(
         transport="streamable-http",
-        host="0.0.0.0",
+        host=host,
         port=port,
         streamable_http_path="/mcp",
         stateless_http=True,
