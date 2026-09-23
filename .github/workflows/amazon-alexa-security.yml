@@ -1,0 +1,44 @@
+name: Amazon Alexa Security Review
+
+on:
+  push:
+    branches:
+      - amazon-alexa
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  dependency-and-static:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install project and security tools
+        run: |
+          pip install -r amazon_alexa/requirements.txt
+          pip install pip-audit bandit
+      - name: Dependency vulnerability audit
+        run: pip-audit -r amazon_alexa/requirements.txt
+      - name: Static security analysis
+        run: bandit -r amazon_alexa -x amazon_alexa/tests -ll
+
+  codeql:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      matrix:
+        language: [python]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+      - name: Analyze with CodeQL
+        uses: github/codeql-action/analyze@v3
