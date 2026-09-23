@@ -55,3 +55,7 @@ Normal CI uses a fake backend so tests are deterministic and never spend API cre
 
 Entrant: Jose Padilla  
 AI engineering assistance: ChatGPT by OpenAI
+
+## Release status
+
+Deterministic CI must pass before a live Token Factory smoke test is attempted. Live inference remains blocked until a Nebius API key is configured outside chat.
