@@ -1,100 +1,124 @@
-# Lead Rescue
+# NIGHTEYE Evidence Engine — Nebius x NVIDIA Hackathon
 
-**An autonomous lead-follow-up agent for busy small-business owners, built with the Strands Agents SDK.**
+This branch contains the Nebius x NVIDIA Global AI Hackathon build of **NIGHTEYE Evidence Engine**.
 
-Lead Rescue takes on the repetitive work between “new inquiry” and “owner decision.” It reads inbound leads, loads business policy, checks real appointment availability, sends routine customer replies, schedules follow-ups, and pauses only when a human decision is actually required.
+The hackathon implementation lives in `nebius_nighteye/`. Older Lead Rescue files elsewhere in the repository predate this hackathon and are not part of the Nebius runtime.
 
-Built during the **Agents for Humans Hackathon 2026** for the **Professional Agents** track.
+## What NIGHTEYE does
 
-## The problem
+NIGHTEYE turns a small packet of time-stamped evidence into an auditable change brief. It is designed to answer:
 
-Small service businesses lose good leads because the owner is simultaneously doing the work, answering calls, driving, quoting jobs, and managing a calendar. Typical lead software creates another inbox to manage. Lead Rescue is designed to do the opposite: quietly clear routine work and surface only decisions that genuinely need the owner.
+- What actually changed?
+- Which statements are observations versus inference?
+- What competing explanations still fit the evidence?
+- What evidence would falsify the leading explanation?
+- What is still unknown?
+- What is the safest next reversible action?
 
-## What the demo proves
+The design goal is not to make an AI sound confident. The goal is to make its reasoning inspectable.
 
-The sample queue contains three intentionally different leads:
+## Hackathon stack
 
-1. **Urgent no-cooling request** — the agent identifies urgency, checks actual availability, and can offer a valid same-day slot.
-2. **Price-match negotiation** — the agent is not allowed to invent a discount, so it escalates a concise decision to the owner.
-3. **Routine tune-up** — the agent checks calendar availability, responds using published business information, and schedules follow-up.
+- **Nebius Token Factory**
+- **NVIDIA Nemotron 3 Super 120B A12B** by default
+- Python 3.12
+- FastAPI
+- OpenAI-compatible Token Factory API
+- Docker
+- Deterministic validation and evidence-reference checks
+- GitHub Actions CI + dependency/security review
 
-This is not a chatbot demo. The agent has tools that change lead state and create real workflow actions.
+Default model:
 
-## Architecture
-
-```mermaid
-flowchart LR
-    A[Inbound Leads] --> B[Next.js Interface]
-    B --> C[Strands Agent]
-    C --> D[Amazon Bedrock]
-    C --> E[Business Context]
-    C --> F[Lead Queue]
-    C --> G[Calendar]
-    C --> H[Reply Action]
-    C --> I[Follow-up Action]
-    C --> J[Owner Escalation]
-    H --> K[Routine work completed]
-    I --> K
-    J --> L[Human decision only]
+```text
+nvidia/nemotron-3-super-120b-a12b
 ```
 
-A larger version is in [`docs/architecture.md`](docs/architecture.md).
+Default Token Factory endpoint:
 
-## Strands implementation
-
-The core agent lives in [`lib/agent.ts`](lib/agent.ts). It uses the Strands tool system for:
-
-- `get_business_context`
-- `get_new_leads`
-- `check_availability`
-- `send_customer_reply`
-- `schedule_follow_up`
-- `escalate_to_owner`
-- `mark_lead_closed`
-
-The preferred hackathon model path is **Amazon Bedrock**. A Vercel AI Gateway model path is included as a convenience for a live hosted demo when Bedrock credentials are not present.
+```text
+https://api.tokenfactory.us-central1.nebius.com/v1/
+```
 
 ## Run locally
 
-Requirements: Node.js 20+ and an AWS account with Bedrock model access.
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r nebius_nighteye/requirements.txt
+export NEBIUS_API_KEY=...
+python -m uvicorn nebius_nighteye.app:app --host 127.0.0.1 --port 8000
+```
+
+Open `http://127.0.0.1:8000`.
+
+The API key stays server-side and is never exposed to the browser.
+
+## Run the deterministic test suite
 
 ```bash
-npm install
-cp .env.example .env.local
-# configure AWS credentials using your preferred AWS-supported method
-npm run dev
+python -m unittest discover -s nebius_nighteye/tests -v
 ```
 
-Open `http://localhost:3000` and press **Run the lead queue**.
+CI also runs compile checks, dependency auditing, Bandit static analysis, and CodeQL.
 
-### Amazon Bedrock configuration
+## Live Token Factory proof
 
-The app automatically uses Bedrock when AWS credentials are present. The default model ID is:
+The repository includes a dedicated live smoke test:
 
-```text
-global.anthropic.claude-sonnet-4-6
+```bash
+python -m nebius_nighteye.live_smoke
 ```
 
-Override it with `BEDROCK_MODEL_ID` if your AWS account uses a different enabled Bedrock model.
+That smoke test is intentionally separate from deterministic CI because it requires a real `NEBIUS_API_KEY` and consumes live inference credits. It must pass before the project is described as having verified live Nebius/Nemotron inference.
 
-### Optional Vercel live-demo fallback
+## Evidence-first contract
 
-If AWS credentials are absent, the app uses the Vercel AI Gateway adapter supported by Strands. On a Vercel project with AI Gateway enabled, OIDC can provide authentication without storing a provider API key.
+Model output is validated before it is accepted. Evidence citations must reference IDs that were actually supplied in the request. Unsupported evidence IDs fail validation instead of being silently accepted.
 
-## Safety / human-in-the-loop design
+The output schema preserves:
 
-Lead Rescue is intentionally conservative around irreversible or owner-only decisions. The prompt and tool boundary prohibit the agent from independently making discounts, price matches, unusual warranty commitments, or unsupported promises. Those cases are converted into explicit owner decisions with options.
+- material-change judgment;
+- observations;
+- competing explanations;
+- falsifier;
+- unknowns;
+- next actions;
+- evidence references.
 
-## Why this can become a business
+## Track
 
-The same architecture can be adapted to garage-door companies, roofers, landscapers, HVAC contractors, electricians, junk-removal companies, and other local businesses where missed or slow lead response directly costs revenue.
+Primary fit: **Best Apps and Agents**.
 
-The commercial product is not “AI chat.” The outcome is **faster lead response, fewer forgotten follow-ups, and fewer owner interruptions.**
+NIGHTEYE is being built as an app someone can actually use, with Nemotron providing the reasoning step and the surrounding application enforcing evidence structure and auditability.
 
-## Hackathon disclosure
+## Significant-update disclosure
 
-This project was newly created during the 2026 Agents for Humans Hackathon submission period. AI coding assistance was used during development. No pre-existing application code was incorporated.
+This repository existed before the Nebius hackathon. The `nebius-nighteye` branch and `nebius_nighteye/` application are the hackathon-specific implementation added during the submission period. Pre-existing Lead Rescue code is not represented as new Nebius work.
+
+## Current verified state
+
+Verified now:
+
+- deterministic evidence-processing tests pass;
+- browser/API application is implemented;
+- Docker packaging is present;
+- security workflow passes;
+- Token Factory client code targets NVIDIA Nemotron through Nebius.
+
+Still required before final submission:
+
+- a successful live Token Factory/Nemotron inference run;
+- a public hosted demo;
+- a public YouTube demo video under three minutes;
+- factual ratings/feedback based on real Nebius/Nemotron usage;
+- required submitter attestations.
 
 ## License
 
 MIT
+
+## Build credit
+
+Entrant: Jose Padilla  
+AI engineering assistance: ChatGPT by OpenAI

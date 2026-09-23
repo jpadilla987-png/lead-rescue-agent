@@ -1,41 +1,58 @@
-# Lead Rescue — Devpost Submission Notes
+# NIGHTEYE Evidence Engine — Devpost Working Draft
 
 ## One-line pitch
 
-Lead Rescue is an autonomous Strands agent that clears routine small-business lead follow-up and interrupts the owner only when a real business decision is required.
+An evidence-first Nemotron agent that detects meaningful change, challenges its own explanation, and produces an auditable next-action brief.
 
 ## Inspiration
 
-Local service-business owners often lose good leads while they are driving, working on-site, quoting jobs, or juggling calls. Traditional CRM software can create another queue to babysit. Lead Rescue flips that model: the agent does the routine work and surfaces only decisions that require human judgment.
+People rarely suffer from a shortage of information. They suffer from too much information and weak separation between what was observed, what was inferred, and what remains unknown.
+
+NIGHTEYE is designed to make that boundary explicit.
 
 ## What it does
 
-Lead Rescue loads business policies, reads new leads, checks real calendar availability, replies to routine customer inquiries, schedules follow-ups, and escalates discounts or price negotiations to the owner. The included demo processes an urgent cooling failure, a price-match request, and a routine tune-up request in one autonomous batch.
+A user supplies a monitoring question and a packet of timestamped evidence. NIGHTEYE:
 
-## How it was built
+1. identifies whether a material change occurred;
+2. separates observation from inference;
+3. generates competing explanations;
+4. names a falsifier for the leading explanation;
+5. preserves explicit unknowns;
+6. recommends reversible next actions;
+7. returns evidence IDs so the reasoning can be audited.
 
-- Strands Agents SDK
-- Amazon Bedrock
-- Python custom tools using the Strands `@tool` decorator
-- Human-in-the-loop guardrails for owner-only decisions
+## How it is built
 
-## Demo video outline — under 5 minutes
+The reasoning call is implemented through **Nebius Token Factory** using the OpenAI-compatible API and an **NVIDIA Nemotron** model. The default model configured in the project is:
 
-**0:00-0:35 — Problem**
-Explain that a busy service-business owner loses leads because they cannot answer every inquiry quickly.
+`nvidia/nemotron-3-super-120b-a12b`
 
-**0:35-1:05 — Architecture**
-Show the README Mermaid diagram and explain that Strands chooses between business context, calendar, reply, follow-up, and owner-escalation tools while Amazon Bedrock provides reasoning.
+FastAPI provides the application layer. A browser interface lets a judge submit an evidence packet and inspect the resulting brief.
 
-**1:05-3:20 — Live run**
-Run `python lead_rescue.py`. Show all three leads being processed. Highlight that normal work is completed automatically but the price-match request is stopped and surfaced as an owner decision.
+The application validates model output after inference. A model response that cites evidence IDs that were never supplied is rejected rather than accepted as fact.
 
-**3:20-4:10 — Safety**
-Show the prompt/tool boundary that forbids invented appointment slots, discounts, unsupported promises, and owner-only commitments.
+## Track
 
-**4:10-4:45 — Commercial value**
-Explain that the same engine can be adapted to HVAC, roofers, electricians, landscapers, garage-door companies, and similar local businesses.
+Best Apps and Agents.
 
-## Disclosure
+## What is already verified
 
-Newly built during the 2026 hackathon period. AI coding assistance was used. No pre-existing application code was incorporated.
+- deterministic core tests pass;
+- security scan passes;
+- browser and API paths are implemented;
+- container packaging is ready;
+- Token Factory client path is implemented.
+
+## What is not yet claimed
+
+A successful live Token Factory/Nemotron inference is not claimed until the live smoke workflow runs with a real Nebius API key and passes.
+
+## Significant-update disclosure
+
+The repository predates this hackathon. The `nebius-nighteye` branch and the `nebius_nighteye/` implementation are the significant hackathon-window update. Older Lead Rescue files are pre-existing and are not part of the Nebius application runtime.
+
+## Build credit
+
+Entrant: Jose Padilla  
+AI engineering assistance: ChatGPT by OpenAI
