@@ -1,0 +1,19 @@
+name: Project Factory CI
+
+on:
+  push:
+    branches:
+      - amazon-alexa
+  workflow_dispatch:
+
+jobs:
+  project-factory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Test reusable project factory
+        run: python -m unittest discover -s project_factory/tests -v
