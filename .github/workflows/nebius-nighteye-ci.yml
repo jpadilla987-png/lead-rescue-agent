@@ -1,0 +1,27 @@
+name: Nebius NIGHTEYE CI
+
+on:
+  push:
+    branches:
+      - nebius-nighteye
+    paths:
+      - "nebius_nighteye/**"
+      - ".github/workflows/nebius-nighteye-ci.yml"
+      - ".github/workflows/nebius-live-smoke.yml"
+  workflow_dispatch:
+
+jobs:
+  deterministic-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: pip install -r nebius_nighteye/requirements.txt
+      - name: Compile
+        run: python -m compileall -q nebius_nighteye
+      - name: Tests
+        run: python -m unittest discover -s nebius_nighteye/tests -v

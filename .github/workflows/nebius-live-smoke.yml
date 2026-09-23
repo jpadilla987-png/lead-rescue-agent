@@ -1,0 +1,22 @@
+name: Nebius NVIDIA Live Smoke
+
+on:
+  workflow_dispatch:
+
+jobs:
+  live-nebius-nvidia:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: pip install -r nebius_nighteye/requirements.txt
+      - name: Live Token Factory / NVIDIA Nemotron smoke
+        env:
+          NEBIUS_API_KEY: ${{ secrets.NEBIUS_API_KEY }}
+          NEBIUS_MODEL: nvidia/nemotron-3-super-120b-a12b
+          NEBIUS_BASE_URL: https://api.tokenfactory.us-central1.nebius.com/v1/
+        run: python -m nebius_nighteye.live_smoke
