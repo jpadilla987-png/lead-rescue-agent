@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lead Rescue Voice — Alexa+ Style Demo</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Amazon Developer Hackathon • Alexa+ Track</p>
+        <h1>Lead Rescue Voice</h1>
+        <p class="sub">Find the leads going cold, explain why they matter now, and prepare the safest next follow-up.</p>
+      </div>
+      <div class="status"><span class="dot"></span><span>Alexa+ style simulation</span></div>
+    </header>
+    <section class="grid">
+      <article class="panel">
+        <div class="panel-head">
+          <div><p class="eyebrow">Morning rescue queue</p><h2>Which leads need attention now?</h2></div>
+          <button id="runBrief">Run morning brief</button>
+        </div>
+        <div id="leadList" class="lead-list"></div>
+      </article>
+      <article class="panel">
+        <p class="eyebrow">Conversation</p>
+        <div id="conversation" class="conversation">
+          <div class="bubble user">Alexa, which leads are going cold?</div>
+          <div class="bubble agent">Run the morning brief to rank the rescue queue.</div>
+        </div>
+        <div class="quick-actions">
+          <button data-action="urgent">Show urgent lead</button>
+          <button data-action="price">Handle price-match request</button>
+          <button data-action="proof">Show proof</button>
+        </div>
+      </article>
+    </section>
+    <section class="grid lower">
+      <article class="panel"><p class="eyebrow">MCP tool trace</p><pre id="trace" class="trace">Waiting for a tool call…</pre></article>
+      <article class="panel">
+        <p class="eyebrow">Safety boundary</p>
+        <div class="safety">
+          <strong>No invented discounts. No fabricated availability. No unauthorized commitments.</strong>
+          <p>Price changes and unusual commitments are escalated to the owner instead of guessed by the agent.</p>
+        </div>
+        <div class="proof-row">
+          <div><span>Functional</span><strong>CI</strong></div>
+          <div><span>Adversarial</span><strong>CI</strong></div>
+          <div><span>Security</span><strong>CI</strong></div>
+        </div>
+      </article>
+    </section>
+    <footer><span>Entrant: Jose Padilla</span><span>AI engineering assistance: ChatGPT by OpenAI</span></footer>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
