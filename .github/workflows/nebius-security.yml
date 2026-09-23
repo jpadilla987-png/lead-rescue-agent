@@ -1,0 +1,40 @@
+name: Nebius NIGHTEYE Security
+
+on:
+  push:
+    branches:
+      - nebius-nighteye
+    paths:
+      - "nebius_nighteye/**"
+      - ".github/workflows/nebius-security.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  dependency-and-static:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install security tools
+        run: pip install pip-audit bandit
+      - name: Dependency vulnerability audit
+        run: pip-audit -r nebius_nighteye/requirements.txt
+      - name: Static security analysis
+        run: bandit -r nebius_nighteye -x nebius_nighteye/tests -ll
+
+  codeql:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: python
+      - uses: github/codeql-action/analyze@v3

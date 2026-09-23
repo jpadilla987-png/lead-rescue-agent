@@ -5,9 +5,11 @@ from pydantic import BaseModel, Field
 
 from .core import AnalysisRequest, EvidenceItem
 from .nebius_client import analyze
+from .web import home
 
 
 app = FastAPI(title="NIGHTEYE Evidence Engine", version="0.1.0")
+app.add_api_route("/", home, methods=["GET"], include_in_schema=False)
 
 
 class EvidenceIn(BaseModel):
