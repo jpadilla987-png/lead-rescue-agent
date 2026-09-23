@@ -1,0 +1,15 @@
+[
+  {
+    "evidence_ref": "github-actions:35812494214",
+    "failure": "The MCP server originally bound to 0.0.0.0 by default, exposing all interfaces.",
+    "id": "network-bind-default",
+    "prevention": "Default to loopback and require an explicit HOST for public deployment.",
+    "regression_test": "Bandit static scan plus Streamable HTTP smoke test",
+    "title": "Unsafe default network bind",
+    "trigger_tags": [
+      "mcp",
+      "network",
+      "server"
+    ]
+  }
+]
