@@ -2,7 +2,6 @@ import unittest
 from datetime import date
 
 from project_factory.commercial_reality import CommercialCase, evaluate
-from project_factory.demo_factory import DemoBeat, build_demo_plan
 from project_factory.evidence_graph import Edge, EvidenceGraph, Node
 from project_factory.failure_memory import FailureMemory, FailureRule
 from project_factory.judge_replay import VisiblePacket, freeze, replay_gate
@@ -14,11 +13,16 @@ from project_factory.zero_to_entry import skeleton
 
 
 class TopTenTests(unittest.TestCase):
-    def test_submission_compiler_blocks_missing_video_and_feedback(self):
+    def test_submission_compiler_blocks_only_real_remaining_gates(self):
         result = packet()
         self.assertFalse(result.ready)
         self.assertIn("demo_video", result.missing_required)
-        self.assertIn("product_feedback", result.missing_required)
+        self.assertIn("submitter_country", result.missing_required)
+        self.assertIn("age_attestation", result.missing_required)
+        self.assertIn("eligible_jurisdiction_attestation", result.missing_required)
+        self.assertIn("employee_attestation", result.missing_required)
+        self.assertNotIn("product_feedback", result.missing_required)
+        self.assertNotIn("working_mcp", result.missing_required)
 
     def test_amazon_demo_fits_three_minutes(self):
         plan = demo_180()
