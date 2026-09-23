@@ -1,0 +1,30 @@
+name: Amazon Alexa MCP CI
+
+on:
+  push:
+    branches:
+      - amazon-alexa
+  workflow_dispatch:
+
+jobs:
+  test-mcp:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install MCP SDK
+        run: pip install -r amazon_alexa/requirements.txt
+      - name: Unit tests
+        run: PYTHONPATH=amazon_alexa python -m unittest discover -s amazon_alexa/tests -v
+      - name: In-process MCP smoke test
+        run: PYTHONPATH=amazon_alexa python amazon_alexa/smoke.py
+      - name: Streamable HTTP MCP smoke test
+        run: |
+          PYTHONPATH=amazon_alexa python amazon_alexa/server.py >/tmp/lead-rescue-mcp.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          sleep 5
+          PYTHONPATH=amazon_alexa python amazon_alexa/http_smoke.py
