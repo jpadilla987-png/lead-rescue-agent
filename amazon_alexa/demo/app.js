@@ -1,8 +1,8 @@
 const leads=[
-{id:"lead-001",name:"Maya Chen",service:"AC no-cooling repair",score:100,value:420,why:"Critical service need — house is 87°F with a toddler."},
-{id:"lead-002",name:"Andre Ruiz",service:"HVAC replacement estimate",score:100,value:9200,why:"High urgency, high-value opportunity, active buying decision."},
-{id:"lead-004",name:"Jordan Brooks",service:"Ductless mini-split",score:60,value:4800,why:"Response delay over 24 hours and high-value opportunity."},
-{id:"lead-003",name:"Sam Patel",service:"Seasonal tune-up",score:36,value:189,why:"Routine lead awaiting a timely response."}
+{id:"lead-001",name:"Maya Chen",service:"AC no-cooling repair",score:90,value:420,why:"Critical service need — house is 87°F with a toddler."},
+{id:"lead-002",name:"Andre Ruiz",service:"HVAC replacement estimate",score:78,value:9200,why:"High urgency, high-value opportunity, active buying decision."},
+{id:"lead-004",name:"Jordan Brooks",service:"Ductless mini-split",score:59,value:4800,why:"Response delay over 24 hours and high-value opportunity."},
+{id:"lead-003",name:"Sam Patel",service:"Seasonal tune-up",score:32,value:189,why:"Routine lead awaiting a timely response."}
 ];
 const leadList=document.getElementById("leadList");
 const trace=document.getElementById("trace");
@@ -11,6 +11,6 @@ function money(n){return new Intl.NumberFormat("en-US",{style:"currency",currenc
 function render(){leadList.innerHTML=leads.slice(0,3).map(l=>'<div class="lead"><div class="score">'+l.score+'</div><div><h3>'+l.name+' · '+l.service+'</h3><p>'+l.why+'</p></div><div class="value">'+money(l.value)+'</div></div>').join("")}
 function addAgent(text){const div=document.createElement("div");div.className="bubble agent";div.textContent=text;conversation.appendChild(div);conversation.scrollTop=conversation.scrollHeight}
 function showTrace(tool,args,result){trace.textContent=JSON.stringify({transport:"streamable-http",endpoint:"/mcp",tool,args,result},null,2)}
-document.getElementById("runBrief").onclick=()=>{render();addAgent("Two leads are at maximum rescue priority. Maya is urgent because the home is 87°F with a toddler. Andre is a $9,200 quoted replacement in an active buying decision.");showTrace("prioritize_leads",{limit:3},{count:3,leads:leads.slice(0,3).map(({id,score,why})=>({id,priority_score:score,why_now:why}))})};
+document.getElementById("runBrief").onclick=()=>{render();addAgent("Maya is first because a critical service need gets a safety-first priority floor. Andre remains a high-priority $9,200 quoted replacement, but revenue does not outrank the critical no-cooling request.");showTrace("prioritize_leads",{limit:3},{count:3,leads:leads.slice(0,3).map(({id,score,why})=>({id,priority_score:score,why_now:why}))})};
 document.querySelectorAll("[data-action]").forEach(btn=>btn.onclick=()=>{const a=btn.dataset.action;if(a==="urgent"){addAgent("Maya Chen is critical. I can prepare a time-sensitive response without inventing an appointment window.");showTrace("prepare_follow_up",{lead_id:"lead-001",tone:"warm"},{requires_owner_approval:false,draft:"Hi Maya, I saw your urgent AC no-cooling repair request. We are treating this as time-sensitive and are checking the earliest available service window now."})}if(a==="price"){addAgent("Andre asked for a price match. I will not promise a discount. This requires owner approval.");showTrace("prepare_follow_up",{lead_id:"lead-002",tone:"warm"},{requires_owner_approval:true,reason:"Customer requested a price match. Do not invent discounts or alter pricing authority.",draft:"Hi Andre, thanks for sending that over. I can get the quote comparison in front of the owner and come back to you with a clear answer."})}if(a==="proof"){addAgent("The MCP implementation, adversarial suite, Project Factory, and security workflow have all passed CI after a network-bind finding was fixed.");showTrace("verification",{},{"functional":"passed","adversarial":"passed","security":"passed","protocol":"2025-11-25 or later compatibility check"})}});
 render();

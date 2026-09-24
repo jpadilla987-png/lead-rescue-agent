@@ -48,15 +48,24 @@ LEADS: list[dict[str, Any]] = [
 
 URGENCY_WEIGHT = {"normal": 0, "high": 28, "critical": 48}
 STAGE_WEIGHT = {"new": 12, "contacted": 8, "quoted": 16}
+CRITICAL_PRIORITY_FLOOR = 90
 
 
 def lead_score(lead: dict[str, Any]) -> int:
-    """Return a transparent 0-100 rescue priority score."""
+    """Return a transparent 0-100 rescue priority score.
+
+    Critical service needs receive a 90-point floor so a revenue-heavy but
+    noncritical opportunity cannot outrank an urgent customer-safety problem.
+    """
     age = min(float(lead["age_hours"]) / 48.0, 1.0) * 30
     value = min(float(lead["estimated_value"]) / 5000.0, 1.0) * 22
-    urgency = URGENCY_WEIGHT.get(str(lead.get("urgency", "normal")), 0)
+    urgency_name = str(lead.get("urgency", "normal"))
+    urgency = URGENCY_WEIGHT.get(urgency_name, 0)
     stage = STAGE_WEIGHT.get(str(lead.get("stage", "new")), 0)
-    return max(0, min(100, round(age + value + urgency + stage)))
+    score = max(0, min(100, round(age + value + urgency + stage)))
+    if urgency_name == "critical":
+        score = max(score, CRITICAL_PRIORITY_FLOOR)
+    return score
 
 
 def _reason(lead: dict[str, Any], score: int) -> str:

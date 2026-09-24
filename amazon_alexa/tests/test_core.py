@@ -9,6 +9,12 @@ class LeadRescueCoreTests(unittest.TestCase):
         scores = [lead["priority_score"] for lead in leads]
         self.assertEqual(scores, sorted(scores, reverse=True))
 
+    def test_critical_service_need_outranks_revenue_heavy_lead(self) -> None:
+        leads = prioritized_leads(2)
+        self.assertEqual(leads[0]["id"], "lead-001")
+        self.assertEqual(leads[0]["priority_score"], 90)
+        self.assertEqual(leads[1]["id"], "lead-002")
+
     def test_price_match_escalates(self) -> None:
         result = draft_follow_up("lead-002")
         self.assertTrue(result["requires_owner_approval"])
