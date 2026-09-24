@@ -19,6 +19,15 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Report live-inference secret gate without using it
+        env:
+          NEBIUS_API_KEY: ${{ secrets.NEBIUS_API_KEY }}
+        run: |
+          if [ -n "$NEBIUS_API_KEY" ]; then
+            echo "NEBIUS_API_KEY_PRESENT=true"
+          else
+            echo "NEBIUS_API_KEY_PRESENT=false"
+          fi
       - name: Install
         run: pip install -r nebius_nighteye/requirements.txt
       - name: Compile
