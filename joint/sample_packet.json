@@ -1,0 +1,20 @@
+{
+  "candidate": {
+    "source": "https://example.com/fresh-paid-request",
+    "buyer": "Example Buyer",
+    "problem": "Repair a broken n8n/API workflow",
+    "age_hours": 3,
+    "compensation_verified": true,
+    "direct_route_verified": true,
+    "cost_to_pursue_usd": 0,
+    "fit_score": 5,
+    "mandatory_live_video": false,
+    "unsupported_requirement": false,
+    "duplicate_status": "new",
+    "human_gate": null
+  },
+  "reviews": [
+    {"reviewer": "Sable", "verdict": "PASS", "reason": "fresh raised-hand buyer"},
+    {"reviewer": "AVA", "verdict": "PASS", "reason": "route and fit verified"}
+  ]
+}
