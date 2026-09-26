@@ -22,6 +22,29 @@ class SemanticGuardTests(unittest.TestCase):
         }
         self.assertEqual(check_equal_fields([row], [rule]), [])
 
+    def test_numeric_string_and_number_are_same_identifier(self):
+        rule = EqualFieldRule("request.id", "result.id", "returned_same_record")
+        row = {"request": {"id": 42}, "result": {"id": "42"}}
+        self.assertEqual(check_equal_fields([row], [rule]), [])
+
+    def test_true_and_one_are_not_same_identifier(self):
+        rule = EqualFieldRule("request.id", "result.id", "returned_same_record")
+        row = {"request": {"id": True}, "result": {"id": 1}}
+        violations = check_equal_fields([row], [rule])
+        self.assertEqual(violations[0]["kind"], "contract_mismatch")
+
+    def test_null_values_are_unverifiable_not_equal(self):
+        rule = EqualFieldRule("request.id", "result.id", "returned_same_record")
+        row = {"request": {"id": None}, "result": {"id": None}}
+        violations = check_equal_fields([row], [rule])
+        self.assertEqual(violations[0]["kind"], "contract_unverifiable")
+
+    def test_zero_rows_with_rule_is_unverifiable(self):
+        rule = EqualFieldRule("request.id", "result.id", "returned_same_record")
+        violations = check_equal_fields([], [rule])
+        self.assertEqual(violations[0]["kind"], "contract_unverifiable")
+        self.assertIn("execution output", violations[0]["missing"])
+
     def test_missing_field_is_not_silently_treated_as_good(self):
         rule = EqualFieldRule("request.id", "result.id", "returned_same_record")
         row = {
