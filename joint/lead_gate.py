@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from dataclasses import asdict, dataclass
 from enum import Enum
 from pathlib import Path
@@ -22,6 +23,7 @@ class Candidate:
     problem: str
     age_hours: float
     compensation_verified: bool
+    pay_quote: str
     direct_route_verified: bool
     cost_to_pursue_usd: float = 0.0
     fit_score: int = 0
@@ -45,6 +47,18 @@ class Decision:
     next_action: str
 
 
+MONEY_PATTERNS = (
+    re.compile(r"[$€£]\s*\d+(?:[.,]\d+)?", re.IGNORECASE),
+    re.compile(r"\b(?:USD|EUR|GBP)\s*\d+(?:[.,]\d+)?\b", re.IGNORECASE),
+    re.compile(r"\b\d+(?:[.,]\d+)?\s*(?:USD|EUR|GBP)\b", re.IGNORECASE),
+)
+
+
+def has_explicit_pay_amount(text: str) -> bool:
+    text = (text or "").strip()
+    return any(pattern.search(text) for pattern in MONEY_PATTERNS)
+
+
 def _normalize_review(v: str) -> str:
     v = v.strip().upper()
     if v not in {"PASS", "KILL", "UNKNOWN"}:
@@ -59,10 +73,12 @@ def assess(candidate: Candidate, reviews: Iterable[Review] = ()) -> Decision:
         reasons.append(f"stale: {candidate.age_hours:.1f}h old (>48h)")
     if not candidate.compensation_verified:
         reasons.append("compensation/payment path not verified")
+    if not has_explicit_pay_amount(candidate.pay_quote):
+        reasons.append("no explicit monetary amount in pay quote")
     if not candidate.direct_route_verified:
         reasons.append("direct application/contact route not verified")
     if candidate.cost_to_pursue_usd > 0:
-        reasons.append(f"requires $\{candidate.cost_to_pursue_usd:.2f} upfront")
+        reasons.append("requires $" + f"{candidate.cost_to_pursue_usd:.2f}" + " upfront")
     if candidate.fit_score < 4:
         reasons.append(f"fit score {candidate.fit_score}/5 below 4/5 gate")
     if candidate.mandatory_live_video:
@@ -98,6 +114,14 @@ def assess(candidate: Candidate, reviews: Iterable[Review] = ()) -> Decision:
             next_action="Do not contact unless new evidence overturns the kill.",
         )
 
+    if len(normalized) < 2 or any(r.verdict != "PASS" for r in normalized):
+        notes = [f"{r.reviewer}: {r.verdict} — {r.reason}" for r in normalized] or ["no independent reviews supplied"]
+        return Decision(
+            verdict=Verdict.EVIDENCE_REQUIRED,
+            reasons=["two independent PASS reviews are required before promotion", *notes],
+            next_action="Complete the missing independent review or resolve UNKNOWN evidence before outbound.",
+        )
+
     if candidate.human_gate:
         return Decision(
             verdict=Verdict.HUMAN_GATE,
@@ -107,7 +131,7 @@ def assess(candidate: Candidate, reviews: Iterable[Review] = ()) -> Decision:
 
     return Decision(
         verdict=Verdict.SURVIVES,
-        reasons=["all hard gates passed"],
+        reasons=["hard gates passed and at least two independent reviews are PASS"],
         next_action="AVA checks exact contact history, then executes at most one outbound action.",
     )
 
