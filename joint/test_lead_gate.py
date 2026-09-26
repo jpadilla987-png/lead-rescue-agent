@@ -1,6 +1,6 @@
 import unittest
 
-from joint.lead_gate import Candidate, Review, Verdict, assess
+from joint.lead_gate import Candidate, Review, Verdict, assess, has_explicit_pay_amount
 
 
 class LeadGateTests(unittest.TestCase):
@@ -11,6 +11,7 @@ class LeadGateTests(unittest.TestCase):
             problem="Fix an AI automation workflow",
             age_hours=4,
             compensation_verified=True,
+            pay_quote="$200 for one workflow",
             direct_route_verified=True,
             cost_to_pursue_usd=0,
             fit_score=5,
@@ -35,8 +36,30 @@ class LeadGateTests(unittest.TestCase):
         d = assess(self.base(compensation_verified=False))
         self.assertEqual(d.verdict, Verdict.KILLED)
 
-    def test_human_gate_is_exact(self):
-        d = assess(self.base(human_gate="identity attestation on registration form"))
+    def test_vague_paid_test_without_amount_kills(self):
+        d = assess(
+            self.base(pay_quote="A small paid test project may come first"),
+            [],
+        )
+        self.assertEqual(d.verdict, Verdict.KILLED)
+        self.assertTrue(any("no explicit monetary amount" in r for r in d.reasons))
+
+    def test_explicit_pay_but_no_reviews_needs_evidence(self):
+        d = assess(self.base(pay_quote="$200 for one workflow"), [])
+        self.assertEqual(d.verdict, Verdict.EVIDENCE_REQUIRED)
+
+    def test_one_pass_one_unknown_needs_evidence(self):
+        d = assess(
+            self.base(),
+            [Review("Sable", "PASS"), Review("AVA", "UNKNOWN", "contact route not rechecked")],
+        )
+        self.assertEqual(d.verdict, Verdict.EVIDENCE_REQUIRED)
+
+    def test_human_gate_is_exact_after_reviews(self):
+        d = assess(
+            self.base(human_gate="identity attestation on registration form"),
+            [Review("Sable", "PASS"), Review("AVA", "PASS")],
+        )
         self.assertEqual(d.verdict, Verdict.HUMAN_GATE)
         self.assertIn("identity attestation", d.next_action)
 
@@ -50,6 +73,12 @@ class LeadGateTests(unittest.TestCase):
     def test_existing_kill_stays_killed(self):
         d = assess(self.base(duplicate_status="killed"))
         self.assertEqual(d.verdict, Verdict.KILLED)
+
+    def test_money_quote_patterns(self):
+        self.assertTrue(has_explicit_pay_amount("$200 fixed"))
+        self.assertTrue(has_explicit_pay_amount("EUR 350"))
+        self.assertTrue(has_explicit_pay_amount("500 USD"))
+        self.assertFalse(has_explicit_pay_amount("paid test may come first"))
 
 
 if __name__ == "__main__":
