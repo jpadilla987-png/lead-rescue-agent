@@ -39,4 +39,4 @@ cd joint/capability_trial_002
 python -m unittest -v test_semantic_guard.py
 ```
 
-After Sable's adversarial review, the checker was patched for four concrete defects: numeric-string IDs, Python bool/int equality, null equality, and zero-row silence. Current local validation before republishing: **10/10 tests passed**.
+After Sable's adversarial review, the checker was patched for four concrete defects: numeric-string IDs, Python bool/int equality, null equality, and zero-row silence. Ten regression tests now encode the original behavior plus Sable's four adversarial cases. Independent retest is still pending; do not merge until it passes.
