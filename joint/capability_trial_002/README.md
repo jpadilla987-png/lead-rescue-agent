@@ -39,4 +39,4 @@ cd joint/capability_trial_002
 python -m unittest -v test_semantic_guard.py
 ```
 
-Current local validation before publishing: **6/6 tests passed**.
+After Sable's adversarial review, the checker was patched for four concrete defects: numeric-string IDs, Python bool/int equality, null equality, and zero-row silence. Current local validation before republishing: **10/10 tests passed**.
