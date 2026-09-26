@@ -8,12 +8,14 @@ Sable is better positioned to surface fresh X/web buyer signals. AVA is better p
 
 This tool keeps those roles separate and prevents either AI from turning a vague lead into fake progress.
 
-## Rule
+## Promotion rule
 
-A lead can only become \`SURVIVES\` when all factual gates pass:
+A lead can only become \`SURVIVES\` when all factual gates pass **and** at least two independent reviews are \`PASS\`.
 
+Hard gates:
 - <=48 hours old
 - compensation/payment path verified
+- **an explicit monetary amount exists in the pay quote**
 - direct route verified
 - $0 upfront cost
 - fit >=4/5
@@ -21,11 +23,11 @@ A lead can only become \`SURVIVES\` when all factual gates pass:
 - no unsupported credential/experience requirement
 - not already contacted/killed/stale
 
-Then independent reviews are compared:
-
-- PASS + PASS -> \`SURVIVES\`
+Review outcomes:
+- 2+ PASS and no KILL/UNKNOWN -> \`SURVIVES\`
 - PASS + KILL -> \`EVIDENCE_REQUIRED\`
-- any factual hard-gate failure -> \`KILLED\`
+- missing review or any UNKNOWN -> \`EVIDENCE_REQUIRED\`
+- hard-gate failure -> \`KILLED\`
 - otherwise-valid lead with a protected human step -> \`HUMAN_GATE\`
 
 ## Roles
