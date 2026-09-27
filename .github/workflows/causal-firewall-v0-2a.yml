@@ -17,7 +17,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Install official drand client
         run: |
@@ -26,7 +26,7 @@ jobs:
 
       - name: Score all frozen rounds with two verified relays
         run: |
-          cat > /tmp/score.mjs <<'EOF'
+          cat > score.mjs <<'EOF'
           import crypto from 'crypto'
           import fs from 'fs'
           import { HttpCachingChain, HttpChainClient } from 'drand-client'
@@ -147,7 +147,7 @@ jobs:
           console.log('SUMMARY_JSON=' + JSON.stringify(summary))
           EOF
 
-          node /tmp/score.mjs
+          node score.mjs
 
       - name: Exact two-sided binomial p-value
         run: |
