@@ -1,0 +1,181 @@
+name: Causal Firewall v0.2a frozen score
+
+on:
+  push:
+    branches:
+      - causal-firewall-v0-2-score
+
+permissions:
+  contents: read
+
+jobs:
+  score:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install official drand client
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install drand-client@latest
+
+      - name: Score all frozen rounds with two verified relays
+        run: |
+          cat > /tmp/score.mjs <<'EOF'
+          import crypto from 'crypto'
+          import fs from 'fs'
+          import { HttpCachingChain, HttpChainClient } from 'drand-client'
+
+          const CHAIN = '52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971'
+          const START = 32519812
+          const END = 32523907
+          const N = END - START + 1
+          const SEED = 'NIGHTEYE-CFT-v0.2-NEGATIVE-CONTROL-2026-09-23'
+          const URLS = [
+            `https://api.drand.sh/${CHAIN}`,
+            `https://api2.drand.sh/${CHAIN}`
+          ]
+          const options = {
+            disableBeaconVerification: false,
+            noCache: true
+          }
+          const clients = URLS.map(url => new HttpChainClient(new HttpCachingChain(url, options), options))
+
+          function predBit(r) {
+            const d = crypto.createHash('sha256').update(`${SEED}|round=${r}`, 'utf8').digest()
+            return (d[0] >> 7) & 1
+          }
+
+          function targetBit(randomness) {
+            return (parseInt(randomness.slice(0, 2), 16) >> 7) & 1
+          }
+
+          function digestSignature(signature) {
+            return crypto.createHash('sha256').update(Buffer.from(signature, 'hex')).digest('hex')
+          }
+
+          async function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms))
+          }
+
+          async function getWithRetry(client, round, label) {
+            let last
+            for (let attempt = 1; attempt <= 7; attempt++) {
+              try {
+                return await client.get(round)
+              } catch (e) {
+                last = e
+                const wait = Math.min(15000, 500 * (2 ** (attempt - 1)))
+                console.error(`retry relay=${label} round=${round} attempt=${attempt} error=${e?.message || e}`)
+                await sleep(wait)
+              }
+            }
+            throw new Error(`relay ${label} failed round ${round}: ${last?.message || last}`)
+          }
+
+          let hits = 0
+          let completed = 0
+          const failures = []
+          const rows = []
+          const batchSize = 8
+
+          for (let base = START; base <= END; base += batchSize) {
+            const rounds = []
+            for (let r = base; r <= Math.min(END, base + batchSize - 1); r++) rounds.push(r)
+
+            const results = await Promise.all(rounds.map(async r => {
+              try {
+                const [a, b] = await Promise.all([
+                  getWithRetry(clients[0], r, 'api1'),
+                  getWithRetry(clients[1], r, 'api2')
+                ])
+                if (a.round !== r || b.round !== r) throw new Error('wrong round')
+                if (a.signature !== b.signature) throw new Error('relay signature disagreement')
+                if (a.randomness !== b.randomness) throw new Error('relay randomness disagreement')
+                if (digestSignature(a.signature) !== a.randomness) throw new Error('randomness != SHA256(signature)')
+                const p = predBit(r)
+                const t = targetBit(a.randomness)
+                return { ok: true, round: r, prediction: p, target: t, match: p === t, randomness: a.randomness, signature: a.signature }
+              } catch (e) {
+                return { ok: false, round: r, error: e?.message || String(e) }
+              }
+            }))
+
+            for (const x of results) {
+              if (!x.ok) failures.push(x)
+              else {
+                completed++
+                if (x.match) hits++
+                rows.push(x)
+              }
+            }
+
+            if ((base - START) % 256 === 0) {
+              console.log(`progress completed=${completed} failures=${failures.length} hits=${hits}`)
+            }
+          }
+
+          const summary = {
+            protocol: 'Causal Firewall v0.2a',
+            chain_hash: CHAIN,
+            start_round: START,
+            end_round: END,
+            required_rounds: N,
+            completed_rounds: completed,
+            missing_or_failed_rounds: failures.length,
+            duplicate_rounds: 0,
+            hits,
+            accuracy: completed ? hits / completed : null,
+            z_vs_0_5: completed === N ? (hits - N / 2) / Math.sqrt(N / 4) : null,
+            relay_agreement: failures.length === 0,
+            signature_verification: 'official drand-client; disableBeaconVerification=false on both relays',
+            digest_check: 'randomness == SHA256(signature) checked every successful round',
+            relay_urls: URLS,
+            frozen_anomaly_low: 1891,
+            frozen_anomaly_high: 2205,
+            classification: failures.length ? 'INCOMPLETE/UNRESOLVED' : (hits <= 1891 || hits >= 2205 ? 'AUDIT TRIGGER' : 'NO PRIMARY ANOMALY'),
+            failures
+          }
+
+          fs.writeFileSync('causal_firewall_v0_2a_raw.json', JSON.stringify({ summary, rows }, null, 2))
+          fs.writeFileSync('causal_firewall_v0_2a_summary.json', JSON.stringify(summary, null, 2))
+          console.log('SUMMARY_JSON=' + JSON.stringify(summary))
+          EOF
+
+          node /tmp/score.mjs
+
+      - name: Exact two-sided binomial p-value
+        run: |
+          python - <<'PY'
+          import json, math
+          path='causal_firewall_v0_2a_summary.json'
+          d=json.load(open(path))
+          n=d['required_rounds']
+          if d['missing_or_failed_rounds']:
+              d['exact_two_sided_binomial_p']=None
+          else:
+              s=d['hits']
+              k=min(s,n-s)
+              num=sum(math.comb(n,i) for i in range(k+1))
+              d['exact_two_sided_binomial_p']=min(1.0, 2*num/(1<<n))
+          json.dump(d, open(path,'w'), indent=2)
+          print(json.dumps(d, indent=2))
+          PY
+
+      - name: Hash result artifacts
+        run: |
+          sha256sum causal_firewall_v0_2a_summary.json causal_firewall_v0_2a_raw.json | tee causal_firewall_v0_2a_sha256.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: causal-firewall-v0-2a-result
+          path: |
+            causal_firewall_v0_2a_summary.json
+            causal_firewall_v0_2a_raw.json
+            causal_firewall_v0_2a_sha256.txt
+          retention-days: 30
