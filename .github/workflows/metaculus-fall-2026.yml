@@ -1,0 +1,35 @@
+name: Metaculus Fall 2026 Bot
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "7,37 * * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  forecast:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      METACULUS_TOKEN: ${{ secrets.METACULUS_TOKEN }}
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      ALLOW_METACULUS_POSTS: "true"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: metaculus_bot/requirements.txt
+
+      - name: Install
+        run: pip install -r metaculus_bot/requirements.txt
+
+      - name: Compile gate
+        run: python -m py_compile metaculus_bot/bot.py
+
+      - name: Forecast
+        run: python metaculus_bot/bot.py --mode all
