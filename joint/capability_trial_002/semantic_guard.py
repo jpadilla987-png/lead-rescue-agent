@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from typing import Any, Iterable
 
@@ -37,14 +38,17 @@ def _normalize_identity(value: Any) -> tuple[bool, str | None]:
         stripped = value.strip()
         if stripped == "":
             return False, None
-        # Numeric-looking strings compare to numbers by canonical text.
-        try:
-            num = float(stripped)
-            if num.is_integer():
-                return True, f"num:{int(num)}"
-            return True, f"num:{num}"
-        except ValueError:
-            return True, f"str:{stripped}"
+        # Only canonical numeric strings compare to numeric values.
+        # Preserve identifier spelling such as "007" because leading zeros can be meaningful.
+        if re.fullmatch(r"-?(?:0|[1-9]\d*)(?:\.\d+)?", stripped):
+            try:
+                num = float(stripped)
+                if num.is_integer():
+                    return True, f"num:{int(num)}"
+                return True, f"num:{num}"
+            except ValueError:
+                pass
+        return True, f"str:{stripped}"
     return True, f"{type(value).__name__}:{value}"
 
 
