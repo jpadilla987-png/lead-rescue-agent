@@ -2,8 +2,20 @@ name: Metaculus Fall 2026 Bot
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "7,37 * * * *"
+    inputs:
+      allow_posts:
+        description: "Explicitly allow Metaculus forecast posting for this manual run"
+        required: true
+        default: false
+        type: boolean
+      mode:
+        description: "Tournament target"
+        required: true
+        default: "fall"
+        type: choice
+        options:
+          - fall
+          - all
 
 permissions:
   contents: read
@@ -15,7 +27,7 @@ jobs:
     env:
       METACULUS_TOKEN: ${{ secrets.METACULUS_TOKEN }}
       OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-      ALLOW_METACULUS_POSTS: "true"
+      ALLOW_METACULUS_POSTS: ${{ inputs.allow_posts }}
     steps:
       - uses: actions/checkout@v4
 
@@ -31,5 +43,8 @@ jobs:
       - name: Compile gate
         run: python -m py_compile metaculus_bot/bot.py
 
+      - name: Policy guard
+        run: python metaculus_bot/test_policy.py
+
       - name: Forecast
-        run: python metaculus_bot/bot.py --mode all
+        run: python metaculus_bot/bot.py --mode "${{ inputs.mode }}"
