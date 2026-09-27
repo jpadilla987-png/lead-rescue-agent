@@ -1,32 +1,37 @@
 # Metaculus Fall 2026 — zero-cost bot lane
 
-Status: **BUILT / NOT LIVE** until both required account secrets are present.
+Status: **SMOKE-VERIFIED / MANUAL-ONLY / PRIZE ELIGIBILITY UNVERIFIED**.
 
-This branch is an isolated, zero-spend attempt for the Fall 2026 FutureEval Bot Tournament. It uses the official `forecasting-tools` package and OpenRouter's free-only router.
+## Verified now
+
+- The Metaculus bot token/account path has successfully posted one test forecast plus one comment.
+- The inference path uses OpenRouter's free-only router.
+- A later free-provider run hit an upstream shared-pool HTTP 429; that was not a Metaculus authentication failure.
+- No paid model fallback is configured.
+- Scheduled posting is intentionally disabled.
 
 ## Hard truth boundaries
 
 - Fall 2026 tournament ID: `fall-futureeval-2026`
 - Optional MiniBench ID: `minibench`
 - Inference model route: `openrouter/free` via LiteLLM name `openrouter/openrouter/free`
-- No paid model fallback is configured.
-- The bot refuses to post unless **both** `METACULUS_TOKEN` and `OPENROUTER_API_KEY` exist **and** `ALLOW_METACULUS_POSTS=true`.
-- A missing secret is a SAFE HOLD, not a failed forecast.
-- Metaculus account activation / Terms acceptance and creation of access tokens remain user-only gates.
-- Prize eligibility is never assumed; actual competition rules control.
+- Publishing requires **all three**:
+  - `METACULUS_TOKEN`
+  - `OPENROUTER_API_KEY`
+  - `ALLOW_METACULUS_POSTS=true`
+- GitHub Actions is **manual-only**. The dispatch form defaults `allow_posts` to false.
+- Prize eligibility is not assumed. The Fall 2026 participant form remains a separate eligibility requirement to verify.
+- Commercial bots are not prize eligible under the current FutureEval policy; hobbyist/open-source bots are the relevant lane.
+- Prize pools are not cash until an award/payment is verified.
 
-## GitHub secrets needed
+## Run policy
 
-`METACULUS_TOKEN` — access token from the user's Metaculus bot account.
+A manual GitHub Actions run must deliberately set `allow_posts=true` to post. Leaving the default false causes a SAFE HOLD.
 
-`OPENROUTER_API_KEY` — user's OpenRouter API key. The configured model route is free-only; no card/spend should be added for this project.
-
-## Design
-
-One research pass + three independent forecast samples per question. The same free model is used for research/reasoning/parsing to avoid paid-provider dependencies. `skip_previously_forecasted_questions=True` prevents redundant repeat work.
-
-The GitHub Action checks every 30 minutes. With missing secrets it exits cleanly without posting. Once the two secrets exist, it forecasts the Fall seasonal tournament and current MiniBench.
+The workflow runs a policy guard before the bot. This exists specifically to prevent a future edit from silently restoring automatic schedules or hard-coding publishing on.
 
 ## Current limitation
 
-This scaffold has not posted a live forecast because the authenticated Metaculus token and OpenRouter key are not available to the connected tooling. Do not call it registered, live, prize-eligible, or earning money until actual Metaculus receipts exist.
+The free inference pool can rate-limit or fail upstream. That is acceptable: the project must fail closed rather than fall back to paid inference.
+
+Do not merge or enable recurring forecasting until participant/prize eligibility is verified and the posting cadence is deliberately approved.
