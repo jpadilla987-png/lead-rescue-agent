@@ -46,5 +46,8 @@ jobs:
       - name: Policy guard
         run: python metaculus_bot/test_policy.py
 
+      - name: Forecasting regression tests
+        run: python -m unittest -v metaculus_bot/test_clamp.py
+
       - name: Forecast
         run: python metaculus_bot/bot.py --mode "${{ inputs.mode }}"
