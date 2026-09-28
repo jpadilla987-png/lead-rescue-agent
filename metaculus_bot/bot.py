@@ -10,6 +10,25 @@ from forecasting_tools import GeneralLlm, TemplateBot
 FALL_TOURNAMENT = "fall-futureeval-2026"
 MINIBENCH = "minibench"
 FREE_MODEL = "openrouter/openrouter/free"
+BINARY_FLOOR = 0.01
+BINARY_CEILING = 0.99
+
+
+class CappedTemplateBot(TemplateBot):
+    """TemplateBot with a no-extra-call binary extremization guard.
+
+    Metaculus' own template already clamps multiple-choice options away from
+    exact 0/1. This makes binary extraction follow the same discipline.
+    """
+
+    def _extract_forecast_from_binary_rationale(
+        self, rationale: str, max_prediction: float, min_prediction: float
+    ) -> float:
+        return super()._extract_forecast_from_binary_rationale(
+            rationale,
+            max_prediction=min(max_prediction, BINARY_CEILING),
+            min_prediction=max(min_prediction, BINARY_FLOOR),
+        )
 
 
 def build_bot(*, publish: bool) -> TemplateBot:
@@ -19,7 +38,7 @@ def build_bot(*, publish: bool) -> TemplateBot:
         timeout=90,
         allowed_tries=2,
     )
-    return TemplateBot(
+    return CappedTemplateBot(
         research_reports_per_question=1,
         predictions_per_research_report=3,
         use_research_summary_to_forecast=False,
