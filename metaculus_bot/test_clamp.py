@@ -1,31 +1,46 @@
+import asyncio
 import unittest
+from unittest.mock import AsyncMock, patch
 
-from metaculus_bot.bot import CappedTemplateBot
+from forecasting_tools import TemplateBot
+from forecasting_tools.data_models.binary_report import BinaryPrediction
 
 
-class BinaryClampTests(unittest.TestCase):
+class BinaryProductionClampTests(unittest.TestCase):
     def setUp(self):
-        self.bot = CappedTemplateBot.__new__(CappedTemplateBot)
+        self.bot = TemplateBot.__new__(TemplateBot)
+        llm = AsyncMock()
+        llm.invoke = AsyncMock(return_value="synthetic reasoning")
+        self.bot.get_llm = lambda *args, **kwargs: llm
+        self.bot._structure_output_validation_samples = 1
 
-    def parse(self, text: str) -> float:
-        return self.bot._extract_forecast_from_binary_rationale(
-            text, max_prediction=1, min_prediction=0
+    def run_case(self, parsed_value: float) -> float:
+        parsed = BinaryPrediction(prediction_in_decimal=parsed_value)
+        target = (
+            "forecasting_tools.forecast_bots.official_bots."
+            "template_bot_2026_spring.structure_output"
         )
+        with patch(target, new=AsyncMock(return_value=parsed)):
+            result = asyncio.run(
+                self.bot._binary_prompt_to_forecast(
+                    question=type(
+                        "Q",
+                        (),
+                        {"page_url": "https://example.invalid/question"},
+                    )(),
+                    prompt="synthetic prompt",
+                )
+            )
+        return result.prediction_value
 
-    def test_zero_becomes_one_percent(self):
-        self.assertEqual(self.parse("Probability: 0%"), 0.01)
+    def test_parser_zero_posts_one_percent(self):
+        self.assertEqual(self.run_case(0.0), 0.01)
 
-    def test_hundred_becomes_ninety_nine_percent(self):
-        self.assertEqual(self.parse("Probability: 100%"), 0.99)
-
-    def test_one_percent_stays_one_percent(self):
-        self.assertEqual(self.parse("Probability: 1%"), 0.01)
-
-    def test_ninety_nine_percent_stays_ninety_nine_percent(self):
-        self.assertEqual(self.parse("Probability: 99%"), 0.99)
+    def test_parser_one_posts_ninety_nine_percent(self):
+        self.assertEqual(self.run_case(1.0), 0.99)
 
     def test_midrange_is_unchanged(self):
-        self.assertEqual(self.parse("Probability: 63%"), 0.63)
+        self.assertEqual(self.run_case(0.63), 0.63)
 
 
 if __name__ == "__main__":
