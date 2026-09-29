@@ -8,6 +8,11 @@ on:
         required: true
         default: false
         type: boolean
+      research_ready:
+        description: "Explicitly attest that NIGHTEYE research-readiness review is complete"
+        required: true
+        default: false
+        type: boolean
       mode:
         description: "Tournament target"
         required: true
@@ -28,6 +33,7 @@ jobs:
       METACULUS_TOKEN: ${{ secrets.METACULUS_TOKEN }}
       OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
       ALLOW_METACULUS_POSTS: ${{ inputs.allow_posts }}
+      NIGHTEYE_RESEARCH_READY: ${{ inputs.research_ready }}
     steps:
       - uses: actions/checkout@v4
 
