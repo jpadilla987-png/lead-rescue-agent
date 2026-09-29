@@ -1,0 +1,59 @@
+name: Metaculus Fall 2026 Bot
+
+on:
+  workflow_dispatch:
+    inputs:
+      allow_posts:
+        description: "Explicitly allow Metaculus forecast posting for this manual run"
+        required: true
+        default: false
+        type: boolean
+      research_ready:
+        description: "Explicitly attest that NIGHTEYE research-readiness review is complete"
+        required: true
+        default: false
+        type: boolean
+      mode:
+        description: "Tournament target"
+        required: true
+        default: "fall"
+        type: choice
+        options:
+          - fall
+          - all
+
+permissions:
+  contents: read
+
+jobs:
+  forecast:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      METACULUS_TOKEN: ${{ secrets.METACULUS_TOKEN }}
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      ALLOW_METACULUS_POSTS: ${{ inputs.allow_posts }}
+      NIGHTEYE_RESEARCH_READY: ${{ inputs.research_ready }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: metaculus_bot/requirements.txt
+
+      - name: Install
+        run: pip install -r metaculus_bot/requirements.txt
+
+      - name: Compile gate
+        run: python -m py_compile metaculus_bot/bot.py
+
+      - name: Policy guard
+        run: python metaculus_bot/test_policy.py
+
+      - name: Forecasting regression tests
+        run: python -m unittest -v metaculus_bot/test_clamp.py
+
+      - name: Forecast
+        run: python metaculus_bot/bot.py --mode "${{ inputs.mode }}"
