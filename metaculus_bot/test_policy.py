@@ -8,9 +8,12 @@ def main() -> None:
     bot = BOT.read_text()
 
     assert "schedule:" not in workflow, "automatic schedule must stay disabled"
-    assert "default: false" in workflow, "manual post permission must default false"
+    assert workflow.count("default: false") >= 2, "both manual safety gates must default false"
     assert "ALLOW_METACULUS_POSTS: ${{ inputs.allow_posts }}" in workflow
+    assert "NIGHTEYE_RESEARCH_READY: ${{ inputs.research_ready }}" in workflow
     assert 'os.getenv("ALLOW_METACULUS_POSTS", "").lower() == "true"' in bot
+    assert 'os.getenv("NIGHTEYE_RESEARCH_READY", "").lower() == "true"' in bot
+    assert "if not research_ready:" in bot
     assert "openrouter/openrouter/free" in bot
     assert "METACULUS_TOKEN" in bot and "OPENROUTER_API_KEY" in bot
     print("Metaculus policy guard: PASS")
