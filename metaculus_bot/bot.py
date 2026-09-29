@@ -45,6 +45,7 @@ def secrets_ready() -> tuple[bool, list[str]]:
 async def run(mode: str) -> int:
     ready, missing = secrets_ready()
     allow_post = os.getenv("ALLOW_METACULUS_POSTS", "").lower() == "true"
+    research_ready = os.getenv("NIGHTEYE_RESEARCH_READY", "").lower() == "true"
 
     if not ready:
         print("SAFE HOLD: missing required secrets: " + ", ".join(missing))
@@ -53,6 +54,11 @@ async def run(mode: str) -> int:
 
     if not allow_post:
         print("SAFE HOLD: secrets exist but ALLOW_METACULUS_POSTS is not true.")
+        print("No forecasts were posted.")
+        return 0
+
+    if not research_ready:
+        print("SAFE HOLD: NIGHTEYE_RESEARCH_READY is not true.")
         print("No forecasts were posted.")
         return 0
 
