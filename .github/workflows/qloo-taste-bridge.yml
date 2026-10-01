@@ -19,5 +19,5 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22.19.0"
-      - name: Unit tests
-        run: node --test qloo_taste_bridge/test.mjs
+      - name: Unit and public-demo tests
+        run: node --test qloo_taste_bridge/test.mjs qloo_taste_bridge/web.test.mjs
