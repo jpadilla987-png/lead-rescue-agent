@@ -1,0 +1,8 @@
+{
+  "name": "qloo-taste-bridge",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:qloo": "node --test qloo_taste_bridge/test.mjs"
+  }
+}
