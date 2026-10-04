@@ -1,0 +1,22 @@
+name: Reference Stability v0.2 CI
+
+on:
+  push:
+    branches:
+      - reference-stability-v0-2
+    paths:
+      - "joint/reference_stability_v0_2/**"
+      - ".github/workflows/reference_stability_v0_2_ci.yml"
+  workflow_dispatch:
+
+jobs:
+  self-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Run frozen scorer self-test
+        working-directory: joint/reference_stability_v0_2
+        run: python self_test.py
