@@ -1,100 +1,58 @@
-# Lead Rescue
+# TasteBridge — Qloo Agentic Hackathon
 
-**An autonomous lead-follow-up agent for busy small-business owners, built with the Strands Agents SDK.**
+TasteBridge turns one public cultural anchor into explainable cross-domain recommendations using Qloo's taste graph.
 
-Lead Rescue takes on the repetitive work between “new inquiry” and “owner decision.” It reads inbound leads, loads business policy, checks real appointment availability, sends routine customer replies, schedules follow-ups, and pauses only when a human decision is actually required.
+This branch is the Qloo-specific hackathon build. The repository existed before the event; the TasteBridge application and Qloo integration were added during the submission period.
 
-Built during the **Agents for Humans Hackathon 2026** for the **Professional Agents** track.
+## Why Qloo is essential
 
-## The problem
+A generic language model can invent a plausible “if you like X, try Y” list. TasteBridge instead uses Qloo twice:
 
-Small service businesses lose good leads because the owner is simultaneously doing the work, answering calls, driving, quoting jobs, and managing a calendar. Typical lead software creates another inbox to manage. Lead Rescue is designed to do the opposite: quietly clear routine work and surface only decisions that genuinely need the owner.
+1. Qloo search resolves the entered public cultural anchor into real Qloo entities.
+2. The user chooses the intended entity.
+3. Qloo Insights uses that Qloo entity ID to retrieve recommendations in another cultural domain.
+4. TasteBridge preserves Qloo provenance and presents limitations separately.
 
-## What the demo proves
+Remove Qloo and the core recommendation flow stops.
 
-The sample queue contains three intentionally different leads:
+## Technical implementation
 
-1. **Urgent no-cooling request** — the agent identifies urgency, checks actual availability, and can offer a valid same-day slot.
-2. **Price-match negotiation** — the agent is not allowed to invent a discount, so it escalates a concise decision to the owner.
-3. **Routine tune-up** — the agent checks calendar availability, responds using published business information, and schedules follow-up.
+- Node.js 22.19+
+- official @qloo/qloo-harness pinned to 0.1.26
+- server-side Qloo search
+- server-side Qloo Insights
+- event endpoint locked to https://hackathon.api.qloo.com
+- explicit public-entity disambiguation
+- fail-closed credential handling
+- browser UI plus HTTP API
+- automated tests
 
-This is not a chatbot demo. The agent has tools that change lead state and create real workflow actions.
+Source lives under qloo_taste_bridge.
 
-## Architecture
+## Responsible use
 
-```mermaid
-flowchart LR
-    A[Inbound Leads] --> B[Next.js Interface]
-    B --> C[Strands Agent]
-    C --> D[Amazon Bedrock]
-    C --> E[Business Context]
-    C --> F[Lead Queue]
-    C --> G[Calendar]
-    C --> H[Reply Action]
-    C --> I[Follow-up Action]
-    C --> J[Owner Escalation]
-    H --> K[Routine work completed]
-    I --> K
-    J --> L[Human decision only]
-```
+TasteBridge rejects obvious personal/contact-like input and keeps credentials server-side. Aggregate cultural affinity is not represented as an individual prediction, causal claim, or evidence for a high-impact decision.
 
-A larger version is in [`docs/architecture.md`](docs/architecture.md).
+## Verification state
 
-## Strands implementation
+Verified in code/tests:
+- two-stage Qloo search to Insights architecture;
+- cross-domain target allowlist;
+- browser/API routing;
+- credential non-disclosure;
+- fail-closed behavior.
 
-The core agent lives in [`lib/agent.ts`](lib/agent.ts). It uses the Strands tool system for:
+Not yet claimed:
+- live Qloo request;
+- live Qloo recommendation quality;
+- public end-to-end deployment;
+- Devpost registration/submission.
 
-- `get_business_context`
-- `get_new_leads`
-- `check_availability`
-- `send_customer_reply`
-- `schedule_follow_up`
-- `escalate_to_owner`
-- `mark_lead_closed`
-
-The preferred hackathon model path is **Amazon Bedrock**. A Vercel AI Gateway model path is included as a convenience for a live hosted demo when Bedrock credentials are not present.
-
-## Run locally
-
-Requirements: Node.js 20+ and an AWS account with Bedrock model access.
-
-```bash
-npm install
-cp .env.example .env.local
-# configure AWS credentials using your preferred AWS-supported method
-npm run dev
-```
-
-Open `http://localhost:3000` and press **Run the lead queue**.
-
-### Amazon Bedrock configuration
-
-The app automatically uses Bedrock when AWS credentials are present. The default model ID is:
-
-```text
-global.anthropic.claude-sonnet-4-6
-```
-
-Override it with `BEDROCK_MODEL_ID` if your AWS account uses a different enabled Bedrock model.
-
-### Optional Vercel live-demo fallback
-
-If AWS credentials are absent, the app uses the Vercel AI Gateway adapter supported by Strands. On a Vercel project with AI Gateway enabled, OIDC can provide authentication without storing a provider API key.
-
-## Safety / human-in-the-loop design
-
-Lead Rescue is intentionally conservative around irreversible or owner-only decisions. The prompt and tool boundary prohibit the agent from independently making discounts, price matches, unusual warranty commitments, or unsupported promises. Those cases are converted into explicit owner decisions with options.
-
-## Why this can become a business
-
-The same architecture can be adapted to garage-door companies, roofers, landscapers, HVAC contractors, electricians, junk-removal companies, and other local businesses where missed or slow lead response directly costs revenue.
-
-The commercial product is not “AI chat.” The outcome is **faster lead response, fewer forgotten follow-ups, and fewer owner interruptions.**
-
-## Hackathon disclosure
-
-This project was newly created during the 2026 Agents for Humans Hackathon submission period. AI coding assistance was used during development. No pre-existing application code was incorporated.
+Those require the event credential and user-controlled Devpost agreements.
 
 ## License
 
 MIT
+
+Entrant: Jose Padilla
+AI engineering assistance: ChatGPT by OpenAI
