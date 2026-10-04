@@ -79,8 +79,10 @@ function liveEnvironment(env) {
 }
 
 export async function runQloo(args, runner = execFileAsync, env = process.env) {
-  const bin = resolveHarnessBin();
+  // Validate server credentials before resolving or executing the optional CLI harness.
+  // This preserves the intended fail-closed error even when the harness is unavailable.
   const childEnv = liveEnvironment(env);
+  const bin = resolveHarnessBin();
   try {
     const { stdout } = await runner(process.execPath, [bin, ...args], {
       timeout: 20000,
