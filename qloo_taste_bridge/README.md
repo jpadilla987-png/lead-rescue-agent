@@ -1,39 +1,61 @@
-# TasteBridge — Qloo Agentic Hackathon work branch
+# TasteBridge
 
-Status: BUILD STARTED / NOT REGISTERED / LIVE QLOO CREDENTIAL NOT YET ISSUED.
+Status: working integration code; live Qloo credential still required.
 
-TasteBridge is an evidence-first cultural context agent. It takes an explicitly provided public cultural anchor such as a brand, artist, film, venue, or category, resolves it through Qloo, and returns a structured evidence packet that a downstream agent can use without pretending to know anything about an individual person.
+TasteBridge is a Qloo-powered cultural bridge. A user enters one public cultural anchor such as a book, film, artist, place, or brand. The app resolves that text through Qloo search, shows the returned Qloo candidates so the user can disambiguate the intended entity, then uses the chosen Qloo entity ID as an interest signal for Qloo Insights in a different cultural domain.
 
-## Why this fits Qloo
+That second Qloo call is the core product behavior. TasteBridge is intentionally not a generic LLM recommender that would behave the same without Qloo.
 
-The product is designed around aggregate cultural affinity rather than generic LLM guessing. The first live integration uses Qloo's supported CLI/API harness. Future steps will add recommendation / shortlist ranking workflows once the event credential is available.
+## Official Qloo surface
 
-## Safety boundary
+The implementation pins the public event harness:
 
-- No names, emails, device IDs, account IDs, or private location history go to Qloo.
-- No sensitive-trait inference.
-- No employment, credit, insurance, housing, health, or political decisions.
-- Qloo results are evidence, not causal claims or individual predictions.
-- The API credential stays server-side and out of source control.
+- @qloo/qloo-harness 0.1.26
+- Node 22.19+
+- official event endpoint https://hackathon.api.qloo.com
+- supported server-side surfaces: qloo api search and qloo api insights
 
-## Current implementation
+The event credential remains server-side. It is never sent to the browser, committed to Git, or placed in command arguments.
 
-`app.mjs` shells out to the official `qloo api search --json` path exposed by `@qloo/qloo-harness`.
-It validates input, invokes Qloo, normalizes the result, and fails closed if Qloo cannot be reached.
+## Flow
+
+1. Search a public cultural anchor through Qloo.
+2. Show Qloo's entity candidates instead of silently guessing identity.
+3. Let the user choose the intended entity.
+4. Call Qloo Insights with that entity as the interest signal.
+5. Return cross-domain recommendations with Qloo provenance and explicit limitations.
+
+Supported target domains in this build: movies, books, music artists, places, and brands.
 
 ## Run
 
-1. Install Node.js 22.19+.
-2. Install the official harness:
-   `npm install --global @qloo/qloo-harness`
-3. Obtain an event-issued credential and run `qloo setup --qloo`.
-4. Run:
-   `node qloo_taste_bridge/app.mjs "Agatha Christie"`
+From qloo_taste_bridge:
 
-No credential should ever be pasted into a repo, chat, browser app, demo, or committed environment file.
+npm install
+QLOO_API_KEY must be configured in the server environment.
+npm start
 
-## Next gates
+Open http://localhost:3000.
 
-1. Devpost registration requires user agreement to Qloo rules, Devpost terms, eligibility, team preference, and two registration answers.
-2. Event-issued Qloo credential is required for a live call.
-3. After live access, add one cross-domain recommendation workflow and a reproducible public demo.
+## Test
+
+npm test
+
+Tests verify search and insights request construction, public-anchor validation, personal/contact-data rejection, cross-domain normalization, fail-closed behavior without a credential, browser routes, and credential non-disclosure.
+
+## Safety boundary
+
+- Public cultural concepts only.
+- No email addresses, device IDs, account IDs, or private location history.
+- No sensitive-trait inference.
+- No employment, credit, insurance, housing, health, or political decisions.
+- Qloo results are aggregate affinity evidence, not causal claims or probabilities about an individual.
+
+## Remaining release gates
+
+1. Receive an event-issued Qloo credential or organizer-approved authenticated gateway.
+2. Execute and save a real search-to-insights Qloo trace.
+3. Deploy the server-side app externally with the credential in the host secret manager.
+4. Verify the public demo end-to-end.
+5. Complete Devpost registration after Jose supplies the required explicit agreements and answers.
+6. Submit the functional demo URL and public repository.
