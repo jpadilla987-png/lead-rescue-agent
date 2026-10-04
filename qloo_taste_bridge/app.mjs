@@ -80,12 +80,13 @@ function liveEnvironment(env) {
 
 export async function runQloo(args, runner = execFileAsync, env = process.env) {
   const bin = resolveHarnessBin();
+  const childEnv = liveEnvironment(env);
   try {
     const { stdout } = await runner(process.execPath, [bin, ...args], {
       timeout: 20000,
       maxBuffer: 2 * 1024 * 1024,
       windowsHide: true,
-      env: liveEnvironment(env),
+      env: childEnv,
     });
     return JSON.parse(stdout);
   } catch (error) {
