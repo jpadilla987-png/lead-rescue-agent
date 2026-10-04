@@ -1,5 +1,6 @@
 import http from "node:http";
 import { integrationStatus, recommendQloo, searchQloo } from "./app.mjs";
+import { buildTasteBridge } from "./bridge.mjs";
 
 const port = Number(process.env.PORT || 3000);
 const maxBody = 8 * 1024;
@@ -11,43 +12,42 @@ const html = `<!doctype html>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>TasteBridge</title>
 <style>
-body{font-family:system-ui,sans-serif;max-width:760px;margin:48px auto;padding:0 20px;line-height:1.5}
-form{display:flex;gap:8px;flex-wrap:wrap}input{flex:1;min-width:260px;padding:12px}button{padding:12px 18px}
-pre{white-space:pre-wrap;background:#f5f5f5;padding:16px;border-radius:8px}
-small{display:block;margin-top:20px}
+body{font-family:system-ui,sans-serif;max-width:820px;margin:42px auto;padding:0 20px;line-height:1.5}
+form{display:grid;gap:14px}input[type=text]{padding:12px;font-size:1rem}.domains{display:flex;gap:12px;flex-wrap:wrap}
+button{padding:12px 18px;width:max-content}pre{white-space:pre-wrap;background:#f5f5f5;padding:16px;border-radius:8px;overflow:auto}
+small{display:block;margin-top:20px}.status{padding:10px 12px;background:#fafafa;border:1px solid #ddd;border-radius:8px}
 </style>
 </head>
 <body>
 <h1>TasteBridge</h1>
-<p>Resolve a public cultural anchor through Qloo and return a provenance-first evidence packet.</p>
-<form id="f"><input id="a" maxlength="120" placeholder="e.g. Agatha Christie" required><button>Search Qloo</button></form>
+<p>Start with one public cultural anchor. TasteBridge resolves it in Qloo, then crosses Qloo's taste graph into the domains you choose.</p>
+<form id="f">
+  <input id="a" type="text" maxlength="120" placeholder="e.g. Agatha Christie, Bauhaus, Brian Eno" required>
+  <div class="domains">
+    <label><input type="checkbox" name="domain" value="music" checked> Music</label>
+    <label><input type="checkbox" name="domain" value="movies" checked> Movies</label>
+    <label><input type="checkbox" name="domain" value="books" checked> Books</label>
+    <label><input type="checkbox" name="domain" value="places"> Places</label>
+    <label><input type="checkbox" name="domain" value="brands"> Brands</label>
+    <label><input type="checkbox" name="domain" value="travel"> Travel</label>
+  </div>
+  <button>Build my cultural bridge</button>
+</form>
+<p class="status">Qloo is the recommendation engine here: no Qloo signal means no recommendation packet.</p>
 <pre id="out">Ready.</pre>
-<small>No email, account ID, device ID, or private location history should be entered.</small>
+<small>Use public cultural concepts only. Do not enter email, account/device identifiers, private location history, or sensitive personal data.</small>
 <script>
-const f=document.getElementById("f"),a=document.getElementById("a"),target=document.getElementById("target"),candidates=document.getElementById("candidates"),out=document.getElementById("out");
-async function recommend(entity){
- out.textContent="Crossing the Qloo taste graph…";
- try{
-  const r=await fetch("/api/recommend",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({entityId:entity.id,targetType:target.value})});
-  const j=await r.json(); out.textContent=JSON.stringify(j,null,2);
- }catch(err){out.textContent="Request failed: "+err.message}
-}
+const f=document.getElementById("f"),a=document.getElementById("a"),out=document.getElementById("out");
 f.addEventListener("submit",async e=>{
- e.preventDefault(); candidates.innerHTML=""; out.textContent="Resolving anchor through Qloo…";
- try{
-  const r=await fetch("/api/search",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({anchor:a.value})});
-  const j=await r.json();
-  if(!r.ok) throw new Error(j.error||"Search failed");
-  for(const entity of j.candidates||[]){
-   const button=document.createElement("button");
-   button.type="button";
-   button.textContent="Use "+entity.name;
-   button.style.margin="8px 8px 0 0";
-   button.onclick=()=>recommend(entity);
-   candidates.appendChild(button);
-  }
-  out.textContent=JSON.stringify({source:j.source,query:j.query,limitations:j.limitations},null,2);
- }catch(err){out.textContent="Request failed: "+err.message}
+  e.preventDefault();
+  const domains=[...document.querySelectorAll('input[name="domain"]:checked')].map(x=>x.value);
+  out.textContent="Resolving the seed and crossing Qloo's taste graph…";
+  try{
+    const r=await fetch("/api/bridge",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({anchor:a.value,domains})});
+    const j=await r.json();
+    if(!r.ok) throw new Error(j.error||"TasteBridge failed");
+    out.textContent=JSON.stringify(j,null,2);
+  }catch(err){out.textContent="Request failed: "+err.message}
 });
 </script>
 </body>
@@ -75,12 +75,21 @@ async function readJson(req) {
   return JSON.parse(Buffer.concat(chunks).toString("utf8") || "{}");
 }
 
-export async function handle(req, res, search = searchQloo, recommend = recommendQloo) {
+export async function handle(req, res, search = searchQloo, recommend = recommendQloo, bridge = buildTasteBridge) {
   if (req.method === "GET" && req.url === "/") {
     return send(res, 200, html, "text/html; charset=utf-8");
   }
   if (req.method === "GET" && req.url === "/health") {
     return send(res, 200, JSON.stringify({ok:true, service:"tastebridge", qloo:integrationStatus()}));
+  }
+  if (req.method === "POST" && req.url === "/api/bridge") {
+    try {
+      const body = await readJson(req);
+      const result = await bridge(body.anchor, body.domains);
+      return send(res, 200, JSON.stringify(result));
+    } catch (error) {
+      return send(res, 400, JSON.stringify({error:error.message}));
+    }
   }
   if (req.method === "POST" && req.url === "/api/search") {
     try {
