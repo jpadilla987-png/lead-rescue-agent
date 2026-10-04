@@ -30,6 +30,26 @@ test("health endpoint responds without exposing credentials", async () => {
   assert.equal(JSON.stringify(body).includes("QLOO_API_KEY"),false);
 });
 
+test("bridge route returns Qloo-dependent cross-domain packet", async () => {
+  const res=responseRecorder();
+  const fakeSearch=async()=>({candidates:[]});
+  const fakeRecommend=async()=>({recommendations:[]});
+  const fakeBridge=async(anchor,domains)=>({
+    source:"qloo",
+    mode:"cross-domain-taste-bridge",
+    query:anchor,
+    domains,
+    seed:{id:"urn:seed:1",name:"Agatha Christie"},
+    recommendations:{books:[{name:"Book Pick",affinity:0.9}]},
+    provenance:{qlooRequired:true},
+  });
+  await handle(request("POST","/api/bridge",{anchor:"Agatha Christie",domains:["books"]}),res,fakeSearch,fakeRecommend,fakeBridge);
+  assert.equal(res.status,200);
+  const body=JSON.parse(res.body);
+  assert.equal(body.mode,"cross-domain-taste-bridge");
+  assert.equal(body.provenance.qlooRequired,true);
+});
+
 test("search route uses server-side Qloo adapter", async () => {
   const res=responseRecorder();
   const fakeSearch=async anchor=>({source:"Qloo search",query:anchor,candidates:[{id:"x1",name:"Agatha Christie"}]});
@@ -49,10 +69,12 @@ test("recommend route uses Qloo insights adapter", async () => {
   assert.equal(body.recommendations[0].name,"Knives Out");
 });
 
-test("search route fails closed on adapter error", async () => {
+test("bridge route fails closed on adapter error", async () => {
   const res=responseRecorder();
-  const fakeSearch=async()=>{throw new Error("401");};
-  await handle(request("POST","/api/search",{anchor:"Agatha Christie"}),res,fakeSearch);
+  const fakeSearch=async()=>({candidates:[]});
+  const fakeRecommend=async()=>({recommendations:[]});
+  const fakeBridge=async()=>{throw new Error("Qloo unavailable");};
+  await handle(request("POST","/api/bridge",{anchor:"Agatha Christie",domains:["books"]}),res,fakeSearch,fakeRecommend,fakeBridge);
   assert.equal(res.status,400);
-  assert.match(JSON.parse(res.body).error,/401/);
+  assert.match(JSON.parse(res.body).error,/Qloo unavailable/);
 });
