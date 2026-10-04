@@ -1,5 +1,5 @@
 import http from "node:http";
-import { searchQloo } from "./app.mjs";
+import { integrationStatus, recommendQloo, searchQloo } from "./app.mjs";
 
 const port = Number(process.env.PORT || 3000);
 const maxBody = 8 * 1024;
@@ -24,12 +24,29 @@ small{display:block;margin-top:20px}
 <pre id="out">Ready.</pre>
 <small>No email, account ID, device ID, or private location history should be entered.</small>
 <script>
-const f=document.getElementById("f"),a=document.getElementById("a"),out=document.getElementById("out");
+const f=document.getElementById("f"),a=document.getElementById("a"),target=document.getElementById("target"),candidates=document.getElementById("candidates"),out=document.getElementById("out");
+async function recommend(entity){
+ out.textContent="Crossing the Qloo taste graph…";
+ try{
+  const r=await fetch("/api/recommend",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({entityId:entity.id,targetType:target.value})});
+  const j=await r.json(); out.textContent=JSON.stringify(j,null,2);
+ }catch(err){out.textContent="Request failed: "+err.message}
+}
 f.addEventListener("submit",async e=>{
- e.preventDefault(); out.textContent="Working…";
+ e.preventDefault(); candidates.innerHTML=""; out.textContent="Resolving anchor through Qloo…";
  try{
   const r=await fetch("/api/search",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({anchor:a.value})});
-  const j=await r.json(); out.textContent=JSON.stringify(j,null,2);
+  const j=await r.json();
+  if(!r.ok) throw new Error(j.error||"Search failed");
+  for(const entity of j.candidates||[]){
+   const button=document.createElement("button");
+   button.type="button";
+   button.textContent="Use "+entity.name;
+   button.style.margin="8px 8px 0 0";
+   button.onclick=()=>recommend(entity);
+   candidates.appendChild(button);
+  }
+  out.textContent=JSON.stringify({source:j.source,query:j.query,limitations:j.limitations},null,2);
  }catch(err){out.textContent="Request failed: "+err.message}
 });
 </script>
@@ -58,17 +75,26 @@ async function readJson(req) {
   return JSON.parse(Buffer.concat(chunks).toString("utf8") || "{}");
 }
 
-export async function handle(req, res, search = searchQloo) {
+export async function handle(req, res, search = searchQloo, recommend = recommendQloo) {
   if (req.method === "GET" && req.url === "/") {
     return send(res, 200, html, "text/html; charset=utf-8");
   }
   if (req.method === "GET" && req.url === "/health") {
-    return send(res, 200, JSON.stringify({ok:true, service:"tastebridge"}));
+    return send(res, 200, JSON.stringify({ok:true, service:"tastebridge", qloo:integrationStatus()}));
   }
   if (req.method === "POST" && req.url === "/api/search") {
     try {
       const body = await readJson(req);
       const result = await search(body.anchor);
+      return send(res, 200, JSON.stringify(result));
+    } catch (error) {
+      return send(res, 400, JSON.stringify({error:error.message}));
+    }
+  }
+  if (req.method === "POST" && req.url === "/api/recommend") {
+    try {
+      const body = await readJson(req);
+      const result = await recommend(body.entityId, body.targetType);
       return send(res, 200, JSON.stringify(result));
     } catch (error) {
       return send(res, 400, JSON.stringify({error:error.message}));
