@@ -1,9 +1,16 @@
 {
   "name": "qloo-taste-bridge",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=22.19.0"
+  },
   "scripts": {
-    "start": "node qloo_taste_bridge/web.mjs",
-    "test:qloo": "node --test qloo_taste_bridge/test.mjs qloo_taste_bridge/web.test.mjs"
+    "start": "node web.mjs",
+    "test": "node --test test.mjs web.test.mjs"
+  },
+  "dependencies": {
+    "@qloo/qloo-harness": "0.1.26"
   }
 }
