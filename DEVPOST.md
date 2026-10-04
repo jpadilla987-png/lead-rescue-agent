@@ -1,41 +1,49 @@
-# Lead Rescue — Devpost Submission Notes
+# TasteBridge — Qloo Agentic Hackathon submission draft
 
 ## One-line pitch
 
-Lead Rescue is an autonomous Strands agent that clears routine small-business lead follow-up and interrupts the owner only when a real business decision is required.
+TasteBridge turns one public cultural anchor into explainable cross-domain recommendations by resolving the anchor through Qloo and crossing Qloo's taste graph into a different domain.
 
-## Inspiration
+## Problem
 
-Local service-business owners often lose good leads while they are driving, working on-site, quoting jobs, or juggling calls. Traditional CRM software can create another queue to babysit. Lead Rescue flips that model: the agent does the routine work and surfaces only decisions that require human judgment.
+Cross-domain recommendations are easy for a language model to make up and difficult for a user to audit. A plausible connection between a favorite book and a movie, place, artist, or brand may have no evidence behind it.
 
-## What it does
+## What TasteBridge does
 
-Lead Rescue loads business policies, reads new leads, checks real calendar availability, replies to routine customer inquiries, schedules follow-ups, and escalates discounts or price negotiations to the owner. The included demo processes an urgent cooling failure, a price-match request, and a routine tune-up request in one autonomous batch.
+1. The user enters a public cultural anchor.
+2. Qloo search resolves the text to Qloo entities.
+3. The user selects the intended entity.
+4. TasteBridge sends that Qloo entity ID into Qloo Insights.
+5. Qloo returns recommendations in the selected target domain.
+6. The app displays those results with Qloo provenance and explicit limitations.
 
-## How it was built
+## Why it is Qloo-powered
 
-- Strands Agents SDK
-- Amazon Bedrock
-- Python custom tools using the Strands `@tool` decorator
-- Human-in-the-loop guardrails for owner-only decisions
+TasteBridge's core flow requires Qloo twice: first for entity resolution, then for aggregate cross-domain affinity. Remove Qloo and the recommendation engine stops. The application does not substitute a generic LLM list.
 
-## Demo video outline — under 5 minutes
+## Technological implementation
 
-**0:00-0:35 — Problem**
-Explain that a busy service-business owner loses leads because they cannot answer every inquiry quickly.
+- Node.js 22.19+
+- @qloo/qloo-harness 0.1.26
+- qloo api search
+- qloo api insights
+- server-only event credential
+- HTTP UI/API
+- Node test runner
+- fail-closed input and credential handling
 
-**0:35-1:05 — Architecture**
-Show the README Mermaid diagram and explain that Strands chooses between business context, calendar, reply, follow-up, and owner-escalation tools while Amazon Bedrock provides reasoning.
+## Responsible-data boundary
 
-**1:05-3:20 — Live run**
-Run `python lead_rescue.py`. Show all three leads being processed. Highlight that normal work is completed automatically but the price-match request is stopped and surfaced as an owner decision.
+Only public cultural concepts/entities are accepted. The project rejects obvious personal/contact-like input and does not use Qloo for sensitive-trait inference or high-impact decisions. Qloo affinity is described as aggregate cultural evidence, not an individual probability.
 
-**3:20-4:10 — Safety**
-Show the prompt/tool boundary that forbids invented appointment slots, discounts, unsupported promises, and owner-only commitments.
+## Significant update disclosure
 
-**4:10-4:45 — Commercial value**
-Explain that the same engine can be adapted to HVAC, roofers, electricians, landscapers, garage-door companies, and similar local businesses.
+The repository existed before the Qloo Agentic Hackathon. The qloo-taste-bridge branch and qloo_taste_bridge application are the hackathon-window implementation. Older Lead Rescue code is pre-existing and is not represented as new Qloo work.
 
-## Disclosure
+## Current proof state
 
-Newly built during the 2026 hackathon period. AI coding assistance was used. No pre-existing application code was incorporated.
+Code and tests: implemented.
+Real Qloo credential: pending organizer/event access.
+Real two-call Qloo trace: pending credential.
+Public hosted demo: pending credential and deployment.
+Devpost registration/submission: pending Jose's explicit registration agreements and required answers.

@@ -1,0 +1,38 @@
+name: Qloo TasteBridge CI
+
+on:
+  push:
+    branches:
+      - qloo-taste-bridge
+    paths:
+      - "qloo_taste_bridge/**"
+      - "README.md"
+      - "DEVPOST.md"
+      - ".github/workflows/qloo-taste-bridge.yml"
+  pull_request:
+    paths:
+      - "qloo_taste_bridge/**"
+      - ".github/workflows/qloo-taste-bridge.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.19.0"
+      - name: Install pinned Qloo harness
+        working-directory: qloo_taste_bridge
+        run: npm install --ignore-scripts
+      - name: Verify harness version
+        working-directory: qloo_taste_bridge
+        run: node -e "const p=require('./node_modules/@qloo/qloo-harness/package.json'); if(p.version!=='0.1.26') process.exit(1); console.log(p.version)"
+      - name: Unit and public-demo tests
+        working-directory: qloo_taste_bridge
+        run: npm test
