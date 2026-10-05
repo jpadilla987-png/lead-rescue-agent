@@ -1,0 +1,63 @@
+@prefix tk: <https://example.org/timeguard#> .
+@prefix time: <http://www.w3.org/2006/time#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+tk:TimeGuardOntology a owl:Ontology ;
+  rdfs:label "TimeGuard Biomedical Temporal Reasoning Ontology" ;
+  rdfs:comment "Phase-1 excerpt demonstrating query-time-safe biomedical knowledge representation." .
+
+tk:Claim a owl:Class .
+tk:Evidence a owl:Class .
+tk:Guideline a owl:Class ; rdfs:subClassOf tk:Claim .
+tk:Intervention a owl:Class .
+tk:DecisionContext a owl:Class .
+tk:ValidityInterval a owl:Class ; rdfs:subClassOf time:ProperInterval .
+tk:EvidenceState a owl:Class .
+tk:Supported a tk:EvidenceState .
+tk:Contradicted a tk:EvidenceState .
+tk:Unresolved a tk:EvidenceState .
+
+tk:supportedBy a owl:ObjectProperty ;
+  rdfs:domain tk:Claim ; rdfs:range tk:Evidence .
+tk:hasValidity a owl:ObjectProperty ;
+  rdfs:domain tk:Claim ; rdfs:range tk:ValidityInterval .
+tk:hasEvidenceState a owl:ObjectProperty ;
+  rdfs:domain tk:Claim ; rdfs:range tk:EvidenceState .
+tk:supersedes a owl:ObjectProperty, owl:TransitiveProperty ;
+  rdfs:domain tk:Claim ; rdfs:range tk:Claim .
+tk:availableAt a owl:DatatypeProperty ;
+  rdfs:domain tk:Evidence ; rdfs:range xsd:dateTime .
+tk:queryTime a owl:DatatypeProperty ;
+  rdfs:domain tk:DecisionContext ; rdfs:range xsd:dateTime .
+tk:validFrom a owl:DatatypeProperty ;
+  rdfs:domain tk:ValidityInterval ; rdfs:range xsd:dateTime .
+tk:validUntil a owl:DatatypeProperty ;
+  rdfs:domain tk:ValidityInterval ; rdfs:range xsd:dateTime .
+
+# Core invariant enforced by the reasoner/application layer:
+# Evidence may support an inference at query time tq only when availableAt <= tq,
+# and the claim's validity interval contains tq. Evidence published after tq is
+# retained for provenance but is prohibited from entering that historical inference.
+
+tk:HistoricalInference a owl:Class ;
+  rdfs:comment "An inference evaluated under an explicit query-time cutoff; future evidence is excluded." .
+tk:TemporalLeakageViolation a owl:Class ;
+  rdfs:comment "Audit finding produced when an inference depends on evidence unavailable at the query time." .
+
+tk:exampleOldGuideline a tk:Guideline ;
+  tk:hasEvidenceState tk:Supported ;
+  tk:hasValidity tk:oldInterval .
+
+tk:oldInterval a tk:ValidityInterval ;
+  tk:validFrom "2020-01-01T00:00:00Z"^^xsd:dateTime ;
+  tk:validUntil "2023-06-30T23:59:59Z"^^xsd:dateTime .
+
+tk:exampleNewGuideline a tk:Guideline ;
+  tk:supersedes tk:exampleOldGuideline ;
+  tk:hasValidity tk:newInterval .
+
+tk:newInterval a tk:ValidityInterval ;
+  tk:validFrom "2023-07-01T00:00:00Z"^^xsd:dateTime .
