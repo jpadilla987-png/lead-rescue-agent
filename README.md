@@ -1,8 +1,8 @@
 # Lead Rescue
 
-**An autonomous lead-follow-up agent for busy small-business owners, built with the Strands Agents SDK.**
+**Experimental lead-intake and follow-up prototype for small service businesses, built with the Strands Agents SDK. Not a live customer service.**
 
-Lead Rescue takes on the repetitive work between “new inquiry” and “owner decision.” It reads inbound leads, loads business policy, checks real appointment availability, sends routine customer replies, schedules follow-ups, and pauses only when a human decision is actually required.
+The hackathon prototype explores the work between “new inquiry” and “owner decision.” Its code includes lead-queue, business-policy, calendar-check, reply and follow-up tools. These are prototype capabilities, **not evidence of a connected customer inbox, production calendar, or customer messages actually delivered**. The proposed commercial pilot is narrower: intake triage and **draft follow-ups requiring owner approval before sending**.
 
 Built during the **Agents for Humans Hackathon 2026** for the **Professional Agents** track.
 
@@ -10,15 +10,15 @@ Built during the **Agents for Humans Hackathon 2026** for the **Professional Age
 
 Small service businesses lose good leads because the owner is simultaneously doing the work, answering calls, driving, quoting jobs, and managing a calendar. Typical lead software creates another inbox to manage. Lead Rescue is designed to do the opposite: quietly clear routine work and surface only decisions that genuinely need the owner.
 
-## What the demo proves
+## What the sample demo illustrates
 
 The sample queue contains three intentionally different leads:
 
-1. **Urgent no-cooling request** — the agent identifies urgency, checks actual availability, and can offer a valid same-day slot.
+1. **Urgent no-cooling request** — the agent identifies urgency, uses the configured demo availability source, and may propose a same-day slot within that sample.
 2. **Price-match negotiation** — the agent is not allowed to invent a discount, so it escalates a concise decision to the owner.
-3. **Routine tune-up** — the agent checks calendar availability, responds using published business information, and schedules follow-up.
+3. **Routine tune-up** — the agent checks the configured calendar source and illustrates a reply and follow-up workflow.
 
-This is not a chatbot demo. The agent has tools that change lead state and create real workflow actions.
+The code contains state-changing workflow tools. In the sample environment, these actions must **not** be interpreted as verified external deliveries, booked appointments, or production integrations. Do not run with real customer data or enable customer sending without explicit authorization, consent, safeguards and integration tests.
 
 ## Architecture
 
@@ -80,6 +80,10 @@ Override it with `BEDROCK_MODEL_ID` if your AWS account uses a different enabled
 ### Optional Vercel live-demo fallback
 
 If AWS credentials are absent, the app uses the Vercel AI Gateway adapter supported by Strands. On a Vercel project with AI Gateway enabled, OIDC can provide authentication without storing a provider API key.
+
+## Commercial pilot boundaries and safety
+
+The proposed Lead Rescue pilot is **not launched**. It requires customer consent and an approved data-processing arrangement, validated opt-out handling, secure storage and deletion rules, verified calendar/inbox integration, human approval of outbound messages, and an audit trail before any real customer data or sending. Never claim that this repository alone provides those operational safeguards.
 
 ## Safety / human-in-the-loop design
 
