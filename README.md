@@ -4,9 +4,9 @@
 
 The hackathon prototype explores the work between “new inquiry” and “owner decision.” Its code includes lead-queue, business-policy, calendar-check, reply and follow-up tools. These are prototype capabilities, **not evidence of a connected customer inbox, production calendar, or customer messages actually delivered**. The proposed commercial pilot is narrower: intake triage and **draft follow-ups requiring owner approval before sending**.
 
-## Paid validation pilot
+## Paid inquiry follow-up review
 
-A single-business, fixed-price **$99 review-first pilot** is open for opt-in interest. It maps one inbound workflow, uses only fictional or fully redacted examples, produces an owner-reviewed queue plus five editable reply drafts, and includes an opt-out handoff checklist. Nothing is sent automatically, and no customer identifiers, credentials, payment data, production-system access, bookings, discounts, or safety decisions are required.
+A single-business, fixed-price **$99 inquiry follow-up review** is open for opt-in interest. It maps one inbound workflow, uses only fictional or fully redacted examples, produces an owner-reviewed queue plus five editable reply drafts, and includes an opt-out handoff checklist. This is not call answering or missed-call automation: it includes no phone-number provisioning, trigger setup, CRM migration, technical implementation, automatic sending, customer identifiers, credentials, payment data, production-system access, bookings, discounts, or safety decisions.
 
 [Review the pilot scope and opt in on issue #5](https://github.com/jpadilla987-png/lead-rescue-agent/issues/5).
 
