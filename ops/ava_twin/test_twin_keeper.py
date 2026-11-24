@@ -21,7 +21,8 @@ class TwinKeeperTests(unittest.TestCase):
   with self.assertRaises(GuardError):change_status(self.con,x,'paid','local://bank-confirmed')
  def test_cash_with_receipt(self):
   x=add(self.con,self.sample)['id'];change_status(self.con,x,'refunded','local://bank-posted-refund')
-  self.assertEqual(report(self.con)['verified_cash_cents'],3000)
+  self.assertEqual(report(self.con)['verified_cash_cents'],0)
+  self.assertEqual(report(self.con)['self_reported_cash_cents'],3000)
  def test_restricted_not_spendable(self):
   o=dict(self.sample);o['restricted']=True;x=add(self.con,o)['id']
   with self.assertRaises(GuardError):change_status(self.con,x,'paid','local://restricted-funds')
@@ -34,6 +35,34 @@ class TwinKeeperTests(unittest.TestCase):
  def test_unsafe_source(self):
   o=dict(self.sample);o['evidence_url']='javascript:alert(1)'
   with self.assertRaises(GuardError):add(self.con,o)
+ def test_fabricated_receipt_not_bank_verified(self):
+  x=add(self.con,self.sample)['id']
+  change_status(self.con,x,'paid','local://anyone-can-type-this')
+  self.assertEqual(report(self.con)['self_reported_cash_cents'],3000)
+  self.assertEqual(report(self.con)['verified_cash_cents'],0)
+ def test_duplicate_receipt_across_leads_rejected(self):
+  first=add(self.con,self.sample)['id']
+  other=dict(self.sample);other['title']='Another fake refund';other['lineage']='unrelated'
+  second=add(self.con,other)['id']
+  change_status(self.con,first,'refunded','local://same-receipt')
+  with self.assertRaises(GuardError):
+   change_status(self.con,second,'refunded','local://same-receipt')
+  self.assertEqual(report(self.con)['self_reported_cash_cents'],3000)
+ def test_repeat_status_is_idempotent(self):
+  x=add(self.con,self.sample)['id']
+  change_status(self.con,x,'paid','local://paid')
+  before=self.con.execute('SELECT count(*) FROM events').fetchone()[0]
+  change_status(self.con,x,'paid','local://paid')
+  after=self.con.execute('SELECT count(*) FROM events').fetchone()[0]
+  self.assertEqual(after,before)
+ def test_receipt_reused_after_status_change_rejected(self):
+  first=add(self.con,self.sample)['id']
+  other=dict(self.sample);other['title']='Other';other['lineage']='different'
+  second=add(self.con,other)['id']
+  change_status(self.con,first,'paid','local://same')
+  change_status(self.con,first,'open')
+  with self.assertRaises(GuardError):
+   change_status(self.con,second,'paid','local://same')
  def test_true_idempotency_across_restart(self):
   r=add(self.con,self.sample);self.con.close();self.con=connect(Path(self.tmp.name)/'a.sqlite')
   self.assertFalse(add(self.con,self.sample)['new']);self.assertEqual(report(self.con)['open_count'],1)
