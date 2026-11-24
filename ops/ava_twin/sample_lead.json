@@ -1,0 +1,1 @@
+{"title":"Example refundable fee (fictional)","kind":"refund","amount_cents":3000,"lineage":"fictional-bank-statement-example","evidence_url":"local://fictional-example","verified":false,"effort_minutes":5,"human_gate":"Bank customer must request and verify any refund"}
