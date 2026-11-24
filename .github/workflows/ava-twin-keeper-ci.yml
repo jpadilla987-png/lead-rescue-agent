@@ -1,0 +1,20 @@
+name: AVA Twin Keeper — offline regression checks
+on:
+  pull_request:
+    paths:
+      - 'ops/ava_twin/**'
+      - '.github/workflows/ava-twin-keeper-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  twin-keeper-tests:
+    name: Proof gates and restart-safety tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run offline standard-library tests (no keys, network, or money)
+        run: python3 -m unittest discover -s ops/ava_twin -p 'test_twin_keeper.py' -v
