@@ -1,0 +1,8 @@
+PO Number,Customer,Ship Address,Amount,Item,Quantity
+PO-101,Demo Buyer A,10 Example St,120,SKU-1,12
+PO-101,Demo Buyer A,10 Example St,120,SKU-1,12
+PO-102,Demo Buyer B,20 Sample Road,75,SKU-2,8
+PO-103,Demo Buyer C,30 Test Lane,90,SKU-3,9
+PO-104,Demo Buyer C,30 Test Lane,90,SKU-3,9
+PO-105,Demo Buyer D,,110,SKU-4,1
+PO-106,Demo Buyer E,,110,SKU-4,1
